@@ -59,24 +59,54 @@ def test_special_characters_are_escaped():
     assert conditions(parse(q))[0][2] == "A<&>B"
 
 
-def test_several_names_match_both_name_fields_case_insensitively():
-    q = Query(organism_group=None, occurrence=BOTH, names=("Primula veris", "vitsippa"))
-    root = parse(q)
-    likes = list(root.iter(OGC + "PropertyIsLike"))
-    assert [(e.find(OGC + "PropertyName").text, e.find(OGC + "Literal").text) for e in likes] == [
+def like_terms(query):
+    """(property, literal, matchCase) of every PropertyIsLike in the filter."""
+    root = parse(query)
+    return [
+        (e.find(OGC + "PropertyName").text, e.find(OGC + "Literal").text, e.get("matchCase"))
+        for e in root.iter(OGC + "PropertyIsLike")
+    ]
+
+
+def names_query(*names):
+    return Query(organism_group=None, occurrence=BOTH, names=names)
+
+
+def test_species_and_swedish_names_match_exactly_ignoring_case():
+    likes = like_terms(names_query("Primula veris", "gullviva"))
+    assert [(f, v) for f, v, _ in likes if v == "Primula veris"] == [
         ("scientificName", "Primula veris"),
         ("vernacularName", "Primula veris"),
-        ("scientificName", "vitsippa"),
-        ("vernacularName", "vitsippa"),
     ]
-    assert all(e.get("matchCase") == "false" for e in likes)
-    assert root.find(OGC + "Or") is not None
+    assert ("vernacularName", "gullviva", "false") in likes
+    assert all(case == "false" for _, _, case in likes)
+    assert parse(names_query("a", "b")).find(OGC + "Or") is not None
 
 
-def test_wildcards_in_names_are_escaped():
-    q = Query(organism_group=None, occurrence=BOTH, names=("a*b?",))
-    literal = [c for c in conditions(parse(q)) if c[1] == "scientificName"][0][2]
-    assert literal == r"a\*b\?"
+def test_a_genus_name_means_the_genus_and_every_species_in_it():
+    likes = like_terms(names_query("Anemone"))
+    assert ("scientificName", "Anemone", "false") in likes
+    assert ("scientificName", "Anemone *", "false") in likes
+    assert like_terms(names_query("Anemone spp.")) == [
+        ("scientificName", "Anemone", "false"),
+        ("scientificName", "Anemone *", "false"),
+    ]
+
+
+def test_sp_means_observations_identified_to_genus_only():
+    assert like_terms(names_query("Anemone sp.")) == [("scientificName", "Anemone", "false")]
+    assert like_terms(names_query("anemone SP")) == [("scientificName", "anemone", "false")]
+
+
+def test_star_is_a_wildcard_and_other_special_characters_are_escaped():
+    likes = like_terms(names_query("anem*"))
+    assert likes == [("scientificName", "anem*", "false"), ("vernacularName", "anem*", "false")]
+    literal = [v for f, v, _ in like_terms(names_query("a?b")) if f == "scientificName"][0]
+    assert literal == r"a\?b"
+
+
+def test_wildcard_in_a_species_name_is_not_expanded_to_genus_terms():
+    assert len(like_terms(names_query("Anemone nemorosa"))) == 2
 
 
 def test_taxon_ids_become_or_of_equals():

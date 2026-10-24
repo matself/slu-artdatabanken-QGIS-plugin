@@ -174,12 +174,20 @@
       <translation>Extrafält</translation>
     </message>
     <message>
+      <source>Genus: Anemone or Anemone spp. (all species), Anemone sp. (genus level only). Wildcard: anem*</source>
+      <translation>Släkte: Anemone eller Anemone spp. (alla arter), Anemone sp. (bara släktnivå). Jokertecken: anem*</translation>
+    </message>
+    <message>
       <source>Species names (leave empty for all species)</source>
       <translation>Artnamn (lämna tomt för alla arter)</translation>
     </message>
     <message>
       <source>The standard fields are always included.</source>
       <translation>Standardfälten ingår alltid.</translation>
+    </message>
+    <message>
+      <source>{name} is the genus {genus}: all its species are included.</source>
+      <translation>{name} är släktet {genus}: alla dess arter ingår.</translation>
     </message>
     <message>
       <source>Species Data</source>

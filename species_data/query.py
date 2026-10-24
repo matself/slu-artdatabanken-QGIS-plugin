@@ -4,6 +4,7 @@ One ``Query`` serialises to an OGC XML filter for the open WFS service and to a
 ``SearchFilterDto`` JSON body for the SOS REST API. This module has no QGIS or
 network dependencies so it can be unit tested anywhere.
 """
+import re
 from dataclasses import dataclass
 from datetime import date
 from typing import Optional
@@ -56,9 +57,9 @@ class BoundingBoxWgs84:
 class Query:
     """What the user wants to see.
 
-    ``names`` are matched case-insensitively and exactly against both the
-    scientific and the Swedish name. The spatial restriction (``bbox_wgs84``
-    from the map canvas, or ``polygon_wgs84``) is part of the filter.
+    ``names`` are matched case-insensitively (see ``name_terms`` for the forms). The
+    spatial restriction (``bbox_wgs84`` from the map canvas, or ``polygon_wgs84``) is part
+    of the filter.
     """
 
     organism_group: Optional[str] = DEFAULT_ORGANISM_GROUP
@@ -93,15 +94,7 @@ class Query:
         if self.taxon_ids:
             terms.append(_or([_eq("dyntaxaTaxonId", int(i)) for i in self.taxon_ids]))
         if self.names:
-            terms.append(
-                _or(
-                    [
-                        _like(field, name)
-                        for name in self.names
-                        for field in ("scientificName", "vernacularName")
-                    ]
-                )
-            )
+            terms.append(_or([term for name in self.names for term in name_terms(name)]))
         if self.county:
             terms.append(_eq("county", self.county))
         if self.municipality:
@@ -215,9 +208,37 @@ def _cmp(operator: str, field: str, value) -> str:
     return f"<ogc:{operator}>{_prop(field)}{_lit(value)}</ogc:{operator}>"
 
 
-def _like(field: str, value: str) -> str:
-    """Case-insensitive exact match: wildcard characters in ``value`` are escaped."""
-    for char in ("\\", "*", "?"):
+_SP_SUFFIX = re.compile(r"\s+(spp?)\.?$", re.IGNORECASE)
+
+
+def name_terms(name: str) -> list:
+    """OGC terms matching one name typed by the user (case-insensitive).
+
+    - ``Anemone`` or ``Anemone spp.``: the genus, that is observations identified only to
+      genus plus every ``Anemone <species>`` (hybrids and subspecies included)
+    - ``Anemone sp.``: only observations identified to genus level
+    - ``anem*``: ``*`` is a wildcard, matched against both scientific and Swedish names
+    - two or more words (``Anemone nemorosa``) or a Swedish name (``vitsippa``): exact match
+    """
+    text = " ".join(name.split())
+    suffix = _SP_SUFFIX.search(text)
+    if suffix:
+        genus = text[: suffix.start()].strip()
+        if suffix.group(1).lower() == "sp":
+            return [_like("scientificName", genus)]
+        return [_like("scientificName", genus), _like("scientificName", genus + " *", True)]
+    if "*" in text:
+        return [_like("scientificName", text, True), _like("vernacularName", text, True)]
+    terms = [_like("scientificName", text), _like("vernacularName", text)]
+    if " " not in text:
+        terms.append(_like("scientificName", text + " *", True))
+    return terms
+
+
+def _like(field: str, value: str, wildcard: bool = False) -> str:
+    """Case-insensitive match. ``*`` is only a wildcard when ``wildcard`` is true."""
+    escaped = ("\\", "?") if wildcard else ("\\", "*", "?")
+    for char in escaped:
         value = value.replace(char, "\\" + char)
     return (
         '<ogc:PropertyIsLike wildCard="*" singleChar="?" escapeChar="\\" matchCase="false">'

@@ -1,4 +1,5 @@
 """Background download of a snapshot, shown with progress in the QGIS task manager."""
+from dataclasses import replace
 from urllib.parse import urlencode
 
 from qgis.core import QgsBlockingNetworkRequest, QgsFeedback, QgsTask
@@ -6,7 +7,7 @@ from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from . import counting, snapshot
-from .net import NetworkError, feature_probe
+from .net import NetworkError, feature_probe, genus_for_swedish_name
 from .query import BOTH, Query
 from .wfs import WFS_URL, request_params
 
@@ -80,11 +81,23 @@ class CountTask(QgsTask):
         self._feedback = QgsFeedback()
         self._result = None
         self._unknown = ()
+        self._aliases = {}
         self._error = None
 
     def cancel(self):
         self._feedback.cancel()
         super().cancel()
+
+    def _resolve_aliases(self):
+        """Swedish genus names (one lower case word, no wildcard) mapped to the genus."""
+        for name in self.query.names:
+            if " " in name or "*" in name or not name[:1].islower():
+                continue
+            genus = genus_for_swedish_name(
+                name, self.query.organism_group, self.isCanceled, self._feedback
+            )
+            if genus:
+                self._aliases[name] = genus
 
     def _name_exists(self, name):
         """Is the name in the data at all, ignoring area, period and the other filters?"""
@@ -93,9 +106,14 @@ class CountTask(QgsTask):
 
     def run(self):
         try:
-            probe = feature_probe(self.query, self.isCanceled, self._feedback)
+            self._resolve_aliases()
+            query = replace(
+                self.query, names=tuple(self._aliases.get(n, n) for n in self.query.names)
+            )
+            self.query_used = query
+            probe = feature_probe(query, self.isCanceled, self._feedback)
             self._result = counting.count(probe)
-            self._unknown = counting.unknown_names(self.query.names, self._name_exists)
+            self._unknown = counting.unknown_names(query.names, self._name_exists)
         except counting.CancelledError:
             return False
         except Exception as exc:  # reported to the user in finished()
@@ -105,7 +123,7 @@ class CountTask(QgsTask):
 
     def finished(self, ok):
         if ok:
-            self._on_done(self._result, self._unknown)
+            self._on_done(self._result, self._unknown, self._aliases)
         elif self._error:
             self._on_error(self._error)
 

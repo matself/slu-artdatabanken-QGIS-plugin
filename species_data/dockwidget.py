@@ -91,6 +91,7 @@ class SpeciesDataDockWidget(QDockWidget):
         self.setObjectName("SpeciesDataDockWidget")
         self._count = None  # (Query, Count) of the last count
         self._unknown = ()  # names in the last count that match nothing in the data
+        self._aliases = {}  # Swedish genus name typed by the user -> scientific genus
         self._count_task = None
         self._execute_pending = False  # the button was pressed, waiting for the count
         self._downloading = False
@@ -186,13 +187,14 @@ class SpeciesDataDockWidget(QDockWidget):
         self.progress.setRange(0, 0)  # busy: the number of requests is not known in advance
         self.progress.setVisible(True)
 
-        def done(result, unknown):
+        def done(result, unknown, aliases):
             if task is not self._count_task:
                 return  # superseded by a newer search
             self._count_task = None
             self.progress.setVisible(False)
             self.count_button.setEnabled(True)
-            self._count = (query, result)
+            self._aliases.update(aliases)
+            self._count = (self.build_query(), result)  # the query now uses the aliases
             self._unknown = unknown
             self._show_count(result)
             if self._execute_pending:
@@ -225,6 +227,10 @@ class SpeciesDataDockWidget(QDockWidget):
             tr("One species name per line, scientific or Swedish\n(for example: vitsippa)")
         )
         form.addWidget(scope)
+        form.addWidget(QLabel(tr(
+            "Genus: Anemone or Anemone spp. (all species), Anemone sp. (genus level only). "
+            "Wildcard: anem*"
+        )))
         form.addWidget(QLabel(tr("Species names (leave empty for all species)")))
         form.addWidget(self.names)
         return tab
@@ -329,7 +335,9 @@ class SpeciesDataDockWidget(QDockWidget):
 
     def build_query(self) -> Query:
         names = tuple(
-            line.strip() for line in self.names.toPlainText().splitlines() if line.strip()
+            self._aliases.get(line.strip(), line.strip())
+            for line in self.names.toPlainText().splitlines()
+            if line.strip()
         )
         date_from, date_to = self._period()
         bbox = self._canvas_bbox() if self.area_canvas.isChecked() else None
@@ -386,6 +394,10 @@ class SpeciesDataDockWidget(QDockWidget):
             ).format(n=number, w=WARN_THRESHOLD)
         else:
             text = tr("About {n} observations.").format(n=number)
+        for typed, genus in self._aliases.items():
+            if typed in self.names.toPlainText().split("\n"):
+                note = tr("{name} is the genus {genus}: all its species are included.")
+                text += "\n" + note.format(name=typed, genus=genus)
         if self._unknown:
             warning = tr("No vascular plant has the name: {names}. Check the spelling.")
             text += "\n" + warning.format(names=", ".join(self._unknown))
