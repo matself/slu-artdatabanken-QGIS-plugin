@@ -1,9 +1,7 @@
-"""Build the snapshot layer: a GeoPackage with the downloaded observations."""
+"""Build the observation layer: temporary, or saved as a GeoPackage where the user chose."""
 from datetime import datetime
-from pathlib import Path
 
 from qgis.core import (
-    QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransformContext,
     QgsFeature,
@@ -33,30 +31,35 @@ _TYPES = {
 _STOCKHOLM = QTimeZone(b"Europe/Stockholm")
 
 
-def snapshot_folder() -> Path:
-    folder = Path(QgsApplication.qgisSettingsDirPath()) / "species_data" / "snapshots"
-    folder.mkdir(parents=True, exist_ok=True)
-    return folder
-
-
 def create_snapshot_layer(
-    rows, fields: tuple, query: Query, name: str, count: Count, retrieved: datetime = None
+    rows,
+    fields: tuple,
+    query: Query,
+    name: str,
+    count: Count,
+    path: str = "",
+    retrieved: datetime = None,
 ):
-    """Write ``rows`` to a new GeoPackage and return it as a layer, or None on failure."""
+    """The observations as a layer, or None on failure.
+
+    With ``path`` the layer is written to that GeoPackage (replacing the file). Without
+    it the layer is temporary: QGIS marks it and offers to save it permanently.
+    """
     retrieved = retrieved or datetime.now()
-    memory = _memory_layer(rows, fields)
-    path = snapshot_folder() / f"observations_{retrieved:%Y%m%d_%H%M%S}.gpkg"
-    options = QgsVectorFileWriter.SaveVectorOptions()
-    options.driverName = "GPKG"
-    options.layerName = "observations"
-    error, *_ = QgsVectorFileWriter.writeAsVectorFormatV3(
-        memory, str(path), QgsCoordinateTransformContext(), options
-    )
-    if error != QgsVectorFileWriter.WriterError.NoError:
-        return None
-    layer = QgsVectorLayer(f"{path}|layername=observations", name, "ogr")
-    if not layer.isValid():
-        return None
+    layer = _memory_layer(rows, fields)
+    if path:
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.driverName = "GPKG"
+        options.layerName = "observations"
+        error, *_ = QgsVectorFileWriter.writeAsVectorFormatV3(
+            layer, path, QgsCoordinateTransformContext(), options
+        )
+        if error != QgsVectorFileWriter.WriterError.NoError:
+            return None
+        layer = QgsVectorLayer(f"{path}|layername=observations", name, "ogr")
+        if not layer.isValid():
+            return None
+    layer.setName(name)
     layer.setRenderer(QgsSingleSymbolRenderer(_symbol()))
     layer.setMetadata(_metadata(query, name, count, retrieved))
     return layer

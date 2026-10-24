@@ -40,6 +40,18 @@
       <translation>Räkna fynd</translation>
     </message>
     <message>
+      <source>GeoPackage (*.gpkg)</source>
+      <translation>GeoPackage (*.gpkg)</translation>
+    </message>
+    <message>
+      <source>Save observations as</source>
+      <translation>Spara fynd som</translation>
+    </message>
+    <message>
+      <source>Temporary layer (not saved)</source>
+      <translation>Tillfälligt lager (sparas inte)</translation>
+    </message>
+    <message>
       <source>Fetch and show observations</source>
       <translation>Hämta och visa fynd</translation>
     </message>
@@ -174,6 +186,10 @@
       <translation>Extrafält</translation>
     </message>
     <message>
+      <source>Save as (leave empty for a temporary layer)</source>
+      <translation>Spara som (lämna tomt för ett tillfälligt lager)</translation>
+    </message>
+    <message>
       <source>Species names (leave empty for all species)</source>
       <translation>Artnamn (lämna tomt för alla arter)</translation>
     </message>
@@ -216,6 +232,10 @@
     <message>
       <source>About {n} observations.</source>
       <translation>Ungefär {n} fynd.</translation>
+    </message>
+    <message>
+      <source>The file {file} exists. Replace it?</source>
+      <translation>Filen {file} finns redan. Ersätta den?</translation>
     </message>
     <message>
       <source>About {n} observations will be fetched. Continue?</source>

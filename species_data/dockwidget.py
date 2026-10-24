@@ -5,6 +5,7 @@ sections follow the structure of SLU Artdatabanken's own search page, Fynddata,
 and share one scrolling window above the fixed count and create buttons.
 """
 from datetime import date, datetime
+from pathlib import Path
 
 from qgis.core import (
     QgsApplication,
@@ -12,7 +13,7 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsProject,
 )
-from qgis.gui import QgsCollapsibleGroupBox
+from qgis.gui import QgsCollapsibleGroupBox, QgsFileWidget
 from qgis.PyQt.QtCore import QCoreApplication, QDate
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -90,6 +91,7 @@ class SpeciesDataDockWidget(QDockWidget):
         self.setObjectName("SpeciesDataDockWidget")
         self._count = None  # (Query, Count) of the last count
         self._unknown = ()  # names in the last count that match nothing in the data
+        self._target = ""  # chosen GeoPackage path, '' for a temporary layer
         self._count_task = None
         self._execute_pending = False  # the button was pressed, waiting for the count
         self._downloading = False
@@ -121,11 +123,18 @@ class SpeciesDataDockWidget(QDockWidget):
         self.count_label.setWordWrap(True)
         self.progress = QProgressBar()
         self.progress.setVisible(False)
+        self.save_path = QgsFileWidget()
+        self.save_path.setStorageMode(QgsFileWidget.StorageMode.SaveFile)
+        self.save_path.setFilter(tr("GeoPackage (*.gpkg)"))
+        self.save_path.setDialogTitle(tr("Save observations as"))
+        self.save_path.lineEdit().setPlaceholderText(tr("Temporary layer (not saved)"))
         self.create_button = QPushButton(tr("Fetch and show observations"))
         self.create_button.clicked.connect(self.on_create)
         layout.addWidget(self.count_button)
         layout.addWidget(self.count_label)
         layout.addWidget(self.progress)
+        layout.addWidget(QLabel(tr("Save as (leave empty for a temporary layer)")))
+        layout.addWidget(self.save_path)
         layout.addWidget(self.create_button)
 
         source = QLabel(
@@ -391,9 +400,30 @@ class SpeciesDataDockWidget(QDockWidget):
         self.count_label.setText(text)
         return assessment
 
+    def _target_path(self):
+        """The chosen GeoPackage path ('' for a temporary layer), or None to cancel."""
+        path = self.save_path.filePath().strip()
+        if not path:
+            return ""
+        if not path.lower().endswith(".gpkg"):
+            path += ".gpkg"
+        if Path(path).exists():
+            answer = QMessageBox.question(
+                self,
+                tr("Species Data"),
+                tr("The file {file} exists. Replace it?").format(file=path),
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return None
+        return path
+
     def on_create(self):
         """Fetch and show: count first (if needed), then download and add the layer."""
         query = self.build_query()
+        target = self._target_path()
+        if target is None:
+            return
+        self._target = target  # asked once, before the count and the download
         self.create_button.setEnabled(False)
         if self._count is not None and self._count[0] == query:
             self._proceed(query, self._count[1])
@@ -433,6 +463,7 @@ class SpeciesDataDockWidget(QDockWidget):
         extras = tuple(key for key, box in self.extras.items() if box.isChecked())
         fields = snapshot.fields_for(query, extras)
         name = self._layer_name(query, result)
+        target = self._target
         self._downloading = True
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
@@ -446,7 +477,7 @@ class SpeciesDataDockWidget(QDockWidget):
 
         def done(rows):
             finish()
-            layer = layers.create_snapshot_layer(rows, fields, query, name, result)
+            layer = layers.create_snapshot_layer(rows, fields, query, name, result, target)
             if layer is None:
                 self._show_count(result)
                 QMessageBox.warning(self, tr("Species Data"), tr("The layer could not be saved."))
