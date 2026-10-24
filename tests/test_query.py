@@ -1,0 +1,210 @@
+"""Query model tests. No QGIS or network needed."""
+import xml.etree.ElementTree as ET
+from datetime import date
+
+import pytest
+
+from species_data.query import (
+    CAPPED,
+    OK,
+    WARN,
+    BoundingBoxWgs84,
+    Query,
+    UnsupportedFilterError,
+    assess_count,
+)
+
+OGC = "{http://www.opengis.net/ogc}"
+GML = "{http://www.opengis.net/gml}"
+
+
+def parse(query):
+    return ET.fromstring(query.to_ogc_filter())
+
+
+def conditions(root):
+    """(operator, property, literal) for every comparison in the filter."""
+    found = []
+    for el in root.iter():
+        name = el.tag.replace(OGC, "")
+        if name.startswith("PropertyIs"):
+            found.append((name, el.find(OGC + "PropertyName").text, el.find(OGC + "Literal").text))
+    return found
+
+
+def test_default_is_vascular_plants_present_only():
+    root = parse(Query())
+    assert root.find(OGC + "And") is not None
+    assert conditions(root) == [
+        ("PropertyIsEqualTo", "organismGroup", "Kärlväxter"),
+        ("PropertyIsEqualTo", "isPresentObservation", "true"),
+    ]
+
+
+def test_empty_query_has_no_filter():
+    assert Query(organism_group=None, present_only=False).to_ogc_filter() == ""
+
+
+def test_single_term_is_not_wrapped_in_and():
+    root = parse(Query(organism_group=None, present_only=False, county="Skåne"))
+    assert root.find(OGC + "And") is None
+    assert conditions(root) == [("PropertyIsEqualTo", "county", "Skåne")]
+
+
+def test_special_characters_are_escaped():
+    q = Query(organism_group=None, present_only=False, county="A<&>B")
+    assert "A&lt;&amp;&gt;B" in q.to_ogc_filter()
+    assert conditions(parse(q))[0][2] == "A<&>B"
+
+
+def test_several_names_match_both_name_fields_case_insensitively():
+    q = Query(organism_group=None, present_only=False, names=("Primula veris", "vitsippa"))
+    root = parse(q)
+    likes = list(root.iter(OGC + "PropertyIsLike"))
+    assert [(e.find(OGC + "PropertyName").text, e.find(OGC + "Literal").text) for e in likes] == [
+        ("scientificName", "Primula veris"),
+        ("vernacularName", "Primula veris"),
+        ("scientificName", "vitsippa"),
+        ("vernacularName", "vitsippa"),
+    ]
+    assert all(e.get("matchCase") == "false" for e in likes)
+    assert root.find(OGC + "Or") is not None
+
+
+def test_wildcards_in_names_are_escaped():
+    q = Query(organism_group=None, present_only=False, names=("a*b?",))
+    literal = [c for c in conditions(parse(q)) if c[1] == "scientificName"][0][2]
+    assert literal == r"a\*b\?"
+
+
+def test_taxon_ids_become_or_of_equals():
+    q = Query(organism_group=None, present_only=False, taxon_ids=(100, 200))
+    assert conditions(parse(q)) == [
+        ("PropertyIsEqualTo", "dyntaxaTaxonId", "100"),
+        ("PropertyIsEqualTo", "dyntaxaTaxonId", "200"),
+    ]
+
+
+def test_bbox_is_in_the_same_filter_as_the_other_terms():
+    q = Query(bbox_wgs84=BoundingBoxWgs84(west=13.1, south=55.65, east=13.3, north=55.75))
+    root = parse(q)
+    box = root.find(f".//{OGC}BBOX")
+    assert box.find(OGC + "PropertyName").text == "point"
+    coords = box.find(f"{GML}Box/{GML}coordinates")
+    assert coords.text == "13.1,55.65 13.3,55.75"
+    assert ("PropertyIsEqualTo", "organismGroup", "Kärlväxter") in conditions(root)
+
+
+def test_polygon_with_hole():
+    ring = [[0, 0], [1, 0], [1, 1], [0, 0]]
+    hole = [[0.2, 0.2], [0.4, 0.2], [0.4, 0.4], [0.2, 0.2]]
+    q = Query(
+        organism_group=None,
+        present_only=False,
+        polygon_wgs84={"type": "Polygon", "coordinates": [ring, hole]},
+    )
+    root = parse(q)
+    assert root.find(f".//{GML}outerBoundaryIs//{GML}coordinates").text == "0,0 1,0 1,1 0,0"
+    inner = root.find(f".//{GML}innerBoundaryIs//{GML}coordinates").text
+    assert inner == "0.2,0.2 0.4,0.2 0.4,0.4 0.2,0.2"
+
+
+def test_multipolygon_is_rejected():
+    q = Query(polygon_wgs84={"type": "MultiPolygon", "coordinates": []})
+    with pytest.raises(UnsupportedFilterError):
+        q.to_ogc_filter()
+
+
+def test_date_range_keeps_whole_local_days():
+    q = Query(
+        organism_group=None,
+        present_only=False,
+        date_from=date(2020, 1, 1),
+        date_to=date(2020, 12, 31),
+    )
+    assert conditions(parse(q)) == [
+        ("PropertyIsGreaterThanOrEqualTo", "endDate", "2020-01-01T00:00:00Z"),
+        ("PropertyIsLessThanOrEqualTo", "startDate", "2020-12-31T21:00:00Z"),
+    ]
+
+
+def test_flags_and_uncertainty():
+    q = Query(
+        organism_group=None,
+        present_only=False,
+        verified_only=True,
+        redlisted_only=True,
+        exclude_uncertain_identification=True,
+        max_uncertainty_m=50,
+    )
+    assert conditions(parse(q)) == [
+        ("PropertyIsEqualTo", "isVerified", "true"),
+        ("PropertyIsEqualTo", "isRedlisted", "true"),
+        ("PropertyIsEqualTo", "isUncertainIdentification", "false"),
+        ("PropertyIsLessThanOrEqualTo", "coordinateUncertaintyInMeters", "50"),
+    ]
+
+
+def test_rest_filter_rejects_names():
+    with pytest.raises(UnsupportedFilterError):
+        Query(organism_group=None, names=("vitsippa",)).to_sos_filter()
+
+
+def test_rest_filter_requires_taxon_ids_for_group():
+    with pytest.raises(UnsupportedFilterError):
+        Query().to_sos_filter()
+
+
+def test_rest_filter_rejects_area_names():
+    with pytest.raises(UnsupportedFilterError):
+        Query(organism_group=None, taxon_ids=(1,), county="Skåne").to_sos_filter()
+
+
+def test_rest_filter_full():
+    q = Query(
+        organism_group=None,
+        taxon_ids=(100,),
+        bbox_wgs84=BoundingBoxWgs84(west=12.0, south=55.0, east=14.0, north=56.0),
+        date_from=date(2020, 1, 1),
+        verified_only=True,
+        exclude_uncertain_identification=True,
+        max_uncertainty_m=100,
+        redlisted_only=True,
+    )
+    assert q.to_sos_filter() == {
+        "taxon": {
+            "ids": [100],
+            "includeUnderlyingTaxa": True,
+            "redListCategories": ["CR", "EN", "VU", "NT"],
+        },
+        "date": {
+            "dateFilterType": "OverlappingStartDateAndEndDate",
+            "startDate": "2020-01-01",
+        },
+        "geographics": {
+            "boundingBox": {
+                "topLeft": {"latitude": 56.0, "longitude": 12.0},
+                "bottomRight": {"latitude": 55.0, "longitude": 14.0},
+            },
+            "maxAccuracy": 100,
+        },
+        "occurrenceStatus": "Present",
+        "verificationStatus": "Verified",
+        "determinationFilter": "NotUnsureDetermination",
+    }
+
+
+@pytest.mark.parametrize(
+    "count,status,at_least",
+    [
+        (0, OK, False),
+        (1999, OK, False),
+        (2000, WARN, False),
+        (4999, WARN, False),
+        (5000, CAPPED, True),
+        (12000, CAPPED, True),
+    ],
+)
+def test_assess_count(count, status, at_least):
+    result = assess_count(count)
+    assert (result.status, result.at_least) == (status, at_least)
