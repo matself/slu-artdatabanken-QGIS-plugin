@@ -2,20 +2,23 @@
 from datetime import datetime
 
 from qgis.core import (
+    QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsFeature,
+    QgsFeatureRequest,
     QgsField,
     QgsFields,
     QgsGeometry,
     QgsLayerMetadata,
     QgsMarkerSymbol,
     QgsPointXY,
-    QgsSingleSymbolRenderer,
+    QgsRendererCategory,
     QgsVectorLayer,
 )
-from qgis.PyQt.QtCore import QDateTime, QMetaType, Qt, QTimeZone
+from qgis.PyQt.QtCore import QDate, QDateTime, QMetaType, Qt, QTimeZone
+from qgis.PyQt.QtGui import QColor
 
-from . import provenance
+from . import provenance, styles
 from .counting import Count
 from .query import Query
 from .wfs import CRS
@@ -40,7 +43,7 @@ def create_layer(
     retrieved = retrieved or datetime.now()
     layer = _memory_layer(rows, fields)
     layer.setName(name)
-    layer.setRenderer(QgsSingleSymbolRenderer(_symbol()))
+    layer.setRenderer(_year_renderer(layer))
     layer.setMetadata(_metadata(query, name, count, retrieved))
     return layer
 
@@ -71,11 +74,30 @@ def _convert(value, kind):
     return value
 
 
-def _symbol():
+def _symbol(color):
     return QgsMarkerSymbol.createSimple(
-        {"name": "circle", "color": "#d95f02", "size": "2.4", "outline_color": "#ffffff",
+        {"name": "circle", "color": color.name(), "size": "2.4", "outline_color": "#ffffff",
          "outline_width": "0.25"}
     )
+
+
+def _year_renderer(layer):
+    """One colour per year of the end date, newest drawn on top."""
+    years = set()
+    for feature in layer.getFeatures():
+        value = feature["endDate"]
+        if isinstance(value, QDate) and value.isValid():
+            years.add(value.year())
+    categories = [
+        QgsRendererCategory(year, _symbol(QColor.fromHsvF(*styles.year_color_hsv(year))), str(year))
+        for year in sorted(years)
+    ]
+    categories.append(QgsRendererCategory("", _symbol(QColor(styles.NO_DATE_COLOR)), ""))
+    renderer = QgsCategorizedSymbolRenderer('year("endDate")', categories)
+    request = QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause('"endDate"', True)])
+    renderer.setOrderBy(request)
+    renderer.setOrderByEnabled(True)
+    return renderer
 
 
 def _metadata(query, name, count, retrieved):

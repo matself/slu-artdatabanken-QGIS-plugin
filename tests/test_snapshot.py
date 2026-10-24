@@ -103,3 +103,14 @@ def test_fields_for_adds_conditional_and_extra_fields():
     extra = names(fields_for(Query(exclude_uncertain_identification=True), ("habitat", "quantity")))
     assert extra[-3:] == ["habitat", "organismQuantity", "organismQuantityUnit"]
     assert "occurrenceRemarks" not in base
+
+
+def test_year_colours_are_stable_and_differ_between_neighbouring_years():
+    from species_data.styles import year_color_hsv
+
+    assert year_color_hsv(2026) == year_color_hsv(2026)
+    hues = [year_color_hsv(y)[0] for y in range(2015, 2027)]
+    assert len(set(round(h, 3) for h in hues)) == len(hues)
+    assert all(0 <= h < 1 for h in hues)
+    gaps = [abs(hues[i] - hues[i + 1]) for i in range(len(hues) - 1)]
+    assert min(min(g, 1 - g) for g in gaps) > 0.1
