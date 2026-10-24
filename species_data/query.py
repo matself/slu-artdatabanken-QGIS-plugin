@@ -279,4 +279,3 @@ def assess_count(
     if count >= warn_at:
         return CountAssessment(WARN, count, at_least=False)
     return CountAssessment(OK, count, at_least=False)
-

@@ -61,6 +61,7 @@ COUNTIES = (
 # REST API to list them, and the choice is kept out of the panel for now.
 ARTPORTALEN = 1
 
+
 def tr_noop(text):
     """Mark a string for translation without translating it yet (see scripts/translations.py)."""
     return text
