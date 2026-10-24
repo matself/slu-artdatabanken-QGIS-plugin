@@ -36,6 +36,10 @@
       <translation>Artdata (SLU Artdatabanken)</translation>
     </message>
     <message>
+      <source>Count observations</source>
+      <translation>Räkna fynd</translation>
+    </message>
+    <message>
       <source>Fetch and show observations</source>
       <translation>Hämta och visa fynd</translation>
     </message>

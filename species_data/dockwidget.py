@@ -13,7 +13,7 @@ from qgis.core import (
     QgsProject,
 )
 from qgis.gui import QgsCollapsibleGroupBox
-from qgis.PyQt.QtCore import QCoreApplication, QDate, QTimer
+from qgis.PyQt.QtCore import QCoreApplication, QDate
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -93,11 +93,6 @@ class SpeciesDataDockWidget(QDockWidget):
         self._count_task = None
         self._execute_pending = False  # the button was pressed, waiting for the count
         self._downloading = False
-        # Count a moment after the last change, so typing does not send a request per key.
-        self._count_timer = QTimer(self)
-        self._count_timer.setSingleShot(True)
-        self._count_timer.setInterval(800)
-        self._count_timer.timeout.connect(self._start_count)
 
         content = QWidget(self)
         layout = QVBoxLayout(content)
@@ -120,12 +115,15 @@ class SpeciesDataDockWidget(QDockWidget):
         scroll.setWidget(sections)
         layout.addWidget(scroll, 1)
 
+        self.count_button = QPushButton(tr("Count observations"))
+        self.count_button.clicked.connect(self._start_count)
         self.count_label = QLabel("")
         self.count_label.setWordWrap(True)
         self.progress = QProgressBar()
         self.progress.setVisible(False)
         self.create_button = QPushButton(tr("Fetch and show observations"))
         self.create_button.clicked.connect(self.on_create)
+        layout.addWidget(self.count_button)
         layout.addWidget(self.count_label)
         layout.addWidget(self.progress)
         layout.addWidget(self.create_button)
@@ -161,19 +159,19 @@ class SpeciesDataDockWidget(QDockWidget):
                 getattr(widget, signal).connect(self._clear_count)
 
     def _clear_count(self, *_):
-        """The inputs changed: forget the old count and schedule a new one."""
+        """The inputs changed: the old count no longer describes the search."""
         self._execute_pending = False
         self._stop_count()
         self._count = None
         self._unknown = ()
-        self.count_label.setText(tr("Counting observations..."))
-        self._count_timer.start()
+        self.count_label.setText("")
 
     def _stop_count(self):
         if self._count_task is not None:
             self._count_task.cancel()
             self._count_task = None
         self.progress.setVisible(False)
+        self.count_button.setEnabled(True)
 
     def _map_moved(self):
         # The search is for the map window at the time of the click: let it finish.
@@ -182,6 +180,8 @@ class SpeciesDataDockWidget(QDockWidget):
 
     def _start_count(self):
         query = self.build_query()
+        self.count_button.setEnabled(False)
+        self.count_label.setText(tr("Counting observations..."))
         self.progress.setRange(0, 0)  # busy: the number of requests is not known in advance
         self.progress.setVisible(True)
 
@@ -190,6 +190,7 @@ class SpeciesDataDockWidget(QDockWidget):
                 return  # superseded by a newer search
             self._count_task = None
             self.progress.setVisible(False)
+            self.count_button.setEnabled(True)
             self._count = (query, result)
             self._unknown = unknown
             self._show_count(result)
@@ -202,6 +203,7 @@ class SpeciesDataDockWidget(QDockWidget):
                 self._count_task = None
                 self._execute_pending = False
                 self.progress.setVisible(False)
+                self.count_button.setEnabled(True)
                 self.create_button.setEnabled(True)
                 self.count_label.setText(message)
 
@@ -397,7 +399,6 @@ class SpeciesDataDockWidget(QDockWidget):
             self._proceed(query, self._count[1])
             return
         self._execute_pending = True
-        self._count_timer.stop()
         if self._count_task is None:
             self._start_count()
 
