@@ -89,9 +89,9 @@ class CountTask(QgsTask):
         super().cancel()
 
     def _resolve_aliases(self):
-        """Swedish genus names (one lower case word, no wildcard) mapped to the genus."""
+        """Swedish genus names (one word starting with a lower case letter) mapped to the genus."""
         for name in self.query.names:
-            if " " in name or "*" in name or not name[:1].islower():
+            if " " in name or not name[:1].islower():
                 continue
             genus = genus_for_swedish_name(
                 name, self.query.organism_group, self.isCanceled, self._feedback

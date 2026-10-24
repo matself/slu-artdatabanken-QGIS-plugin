@@ -58,6 +58,10 @@
 (till exempel: vitsippa)</translation>
     </message>
     <message>
+      <source>A genus name (for example Anemone) includes all its species.</source>
+      <translation>Ett släktnamn (till exempel Anemone) omfattar alla arter i släktet.</translation>
+    </message>
+    <message>
       <source>All years</source>
       <translation>Alla år</translation>
     </message>
@@ -172,10 +176,6 @@
     <message>
       <source>Extra fields</source>
       <translation>Extrafält</translation>
-    </message>
-    <message>
-      <source>Genus: Anemone or Anemone spp. (all species), Anemone sp. (genus level only). Wildcard: anem*</source>
-      <translation>Släkte: Anemone eller Anemone spp. (alla arter), Anemone sp. (bara släktnivå). Jokertecken: anem*</translation>
     </message>
     <message>
       <source>Species names (leave empty for all species)</source>

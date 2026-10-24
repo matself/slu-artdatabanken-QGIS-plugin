@@ -87,25 +87,19 @@ def test_a_genus_name_means_the_genus_and_every_species_in_it():
     likes = like_terms(names_query("Anemone"))
     assert ("scientificName", "Anemone", "false") in likes
     assert ("scientificName", "Anemone *", "false") in likes
-    assert like_terms(names_query("Anemone spp.")) == [
-        ("scientificName", "Anemone", "false"),
-        ("scientificName", "Anemone *", "false"),
+    assert ("vernacularName", "Anemone", "false") in likes
+
+
+def test_sp_and_wildcards_are_plain_text_not_special():
+    assert like_terms(names_query("Anemone sp.")) == [
+        ("scientificName", "Anemone sp.", "false"),
+        ("vernacularName", "Anemone sp.", "false"),
     ]
+    star = [v for f, v, _ in like_terms(names_query("anem*")) if f == "scientificName"]
+    assert star == ["anem\\*", "anem\\* *"]
 
 
-def test_sp_means_observations_identified_to_genus_only():
-    assert like_terms(names_query("Anemone sp.")) == [("scientificName", "Anemone", "false")]
-    assert like_terms(names_query("anemone SP")) == [("scientificName", "anemone", "false")]
-
-
-def test_star_is_a_wildcard_and_other_special_characters_are_escaped():
-    likes = like_terms(names_query("anem*"))
-    assert likes == [("scientificName", "anem*", "false"), ("vernacularName", "anem*", "false")]
-    literal = [v for f, v, _ in like_terms(names_query("a?b")) if f == "scientificName"][0]
-    assert literal == r"a\?b"
-
-
-def test_wildcard_in_a_species_name_is_not_expanded_to_genus_terms():
+def test_a_species_name_gets_no_genus_terms():
     assert len(like_terms(names_query("Anemone nemorosa"))) == 2
 
 

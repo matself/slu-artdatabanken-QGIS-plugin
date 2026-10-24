@@ -4,7 +4,6 @@ One ``Query`` serialises to an OGC XML filter for the open WFS service and to a
 ``SearchFilterDto`` JSON body for the SOS REST API. This module has no QGIS or
 network dependencies so it can be unit tested anywhere.
 """
-import re
 from dataclasses import dataclass
 from datetime import date
 from typing import Optional
@@ -208,38 +207,31 @@ def _cmp(operator: str, field: str, value) -> str:
     return f"<ogc:{operator}>{_prop(field)}{_lit(value)}</ogc:{operator}>"
 
 
-_SP_SUFFIX = re.compile(r"\s+(spp?)\.?$", re.IGNORECASE)
-
-
 def name_terms(name: str) -> list:
-    """OGC terms matching one name typed by the user (case-insensitive).
+    """OGC terms matching one name typed by the user (case-insensitive, no wildcards).
 
-    - ``Anemone`` or ``Anemone spp.``: the genus, that is observations identified only to
-      genus plus every ``Anemone <species>`` (hybrids and subspecies included)
-    - ``Anemone sp.``: only observations identified to genus level
-    - ``anem*``: ``*`` is a wildcard, matched against both scientific and Swedish names
-    - two or more words (``Anemone nemorosa``) or a Swedish name (``vitsippa``): exact match
+    - one word (``Anemone``): the genus, that is observations identified only to genus
+      plus every ``Anemone <species>`` (hybrids and subspecies included), and also a
+      Swedish name that is exactly that word
+    - two or more words (``Anemone nemorosa``): exact scientific or Swedish name
     """
     text = " ".join(name.split())
-    suffix = _SP_SUFFIX.search(text)
-    if suffix:
-        genus = text[: suffix.start()].strip()
-        if suffix.group(1).lower() == "sp":
-            return [_like("scientificName", genus)]
-        return [_like("scientificName", genus), _like("scientificName", genus + " *", True)]
-    if "*" in text:
-        return [_like("scientificName", text, True), _like("vernacularName", text, True)]
     terms = [_like("scientificName", text), _like("vernacularName", text)]
     if " " not in text:
-        terms.append(_like("scientificName", text + " *", True))
+        terms.append(_like("scientificName", text, True))
     return terms
 
 
-def _like(field: str, value: str, wildcard: bool = False) -> str:
-    """Case-insensitive match. ``*`` is only a wildcard when ``wildcard`` is true."""
-    escaped = ("\\", "?") if wildcard else ("\\", "*", "?")
-    for char in escaped:
+def _like(field: str, value: str, any_species: bool = False) -> str:
+    """Case-insensitive match of ``value`` as typed: ``*`` and ``?`` are escaped.
+
+    With ``any_species`` the match also covers ``value`` followed by a space and anything
+    (every species of a genus).
+    """
+    for char in ("\\", "*", "?"):
         value = value.replace(char, "\\" + char)
+    if any_species:
+        value += " *"
     return (
         '<ogc:PropertyIsLike wildCard="*" singleChar="?" escapeChar="\\" matchCase="false">'
         f"{_prop(field)}{_lit(value)}</ogc:PropertyIsLike>"

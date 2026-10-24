@@ -227,10 +227,9 @@ class SpeciesDataDockWidget(QDockWidget):
             tr("One species name per line, scientific or Swedish\n(for example: vitsippa)")
         )
         form.addWidget(scope)
-        form.addWidget(QLabel(tr(
-            "Genus: Anemone or Anemone spp. (all species), Anemone sp. (genus level only). "
-            "Wildcard: anem*"
-        )))
+        hint = QLabel(tr("A genus name (for example Anemone) includes all its species."))
+        hint.setWordWrap(True)
+        form.addWidget(hint)
         form.addWidget(QLabel(tr("Species names (leave empty for all species)")))
         form.addWidget(self.names)
         return tab
