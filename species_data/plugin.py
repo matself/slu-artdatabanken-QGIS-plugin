@@ -37,12 +37,12 @@ class SpeciesDataPlugin:
         self.menu_name = self.tr("Species Data (SLU Artdatabanken)")
         self.action = QAction(icon, self.menu_name, self.iface.mainWindow())
         self.action.triggered.connect(self.run)
-        self.iface.addWebToolBarIcon(self.action)
-        self.iface.addPluginToWebMenu("&" + self.menu_name, self.action)
+        self.iface.addToolBarIcon(self.action)
+        self.iface.addPluginToMenu("&" + self.menu_name, self.action)
 
     def unload(self):
-        self.iface.removePluginWebMenu("&" + self.menu_name, self.action)
-        self.iface.removeWebToolBarIcon(self.action)
+        self.iface.removePluginMenu("&" + self.menu_name, self.action)
+        self.iface.removeToolBarIcon(self.action)
         self.action.deleteLater()
         self.action = None
         if self.dock is not None:
