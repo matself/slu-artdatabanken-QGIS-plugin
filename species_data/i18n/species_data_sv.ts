@@ -44,8 +44,8 @@
       <translation>Hämta och visa fynd</translation>
     </message>
     <message>
-      <source>Enter at least one species or genus name.</source>
-      <translation>Ange minst ett arts- eller släktnamn.</translation>
+      <source>Enter at least one species or genus name, or tick All species.</source>
+      <translation>Ange minst ett arts- eller släktnamn, eller kryssa i Alla arter.</translation>
     </message>
     <message>
       <source>Counting observations...</source>
@@ -64,6 +64,10 @@
     <message>
       <source>A genus name (for example Anemone) includes all its species.</source>
       <translation>Ett släktnamn (till exempel Anemone) omfattar alla arter i släktet.</translation>
+    </message>
+    <message>
+      <source>All species (no name filter)</source>
+      <translation>Alla arter (inget namnfilter)</translation>
     </message>
     <message>
       <source>All years</source>
@@ -182,8 +186,8 @@
       <translation>Extrafält</translation>
     </message>
     <message>
-      <source>Species or genus names (required)</source>
-      <translation>Arts- eller släktnamn (obligatoriskt)</translation>
+      <source>Species or genus names</source>
+      <translation>Arts- eller släktnamn</translation>
     </message>
     <message>
       <source>The standard fields are always included.</source>

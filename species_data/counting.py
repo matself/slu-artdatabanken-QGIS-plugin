@@ -37,17 +37,18 @@ def at_least(exists: Probe, threshold: int) -> bool:
 def count(exists: Probe, limit: int = WFS_PAGING_LIMIT) -> Count:
     """Exact count by doubling and bisection: about 2 * log2(n) requests.
 
-    Paging data can shift between requests, so treat the result as approximate.
+    A result at or above ``limit`` is recognised with two requests, so a search that
+    matches almost everything does not cost dozens. Paging data can shift between
+    requests, so treat the result as approximate.
     """
     if not exists(0):
         return Count(0, True)
-    low, high = 1, 2  # exists(low - 1) is True
+    if exists(limit - 1):
+        return Count(limit, False)
+    low, high = 1, 2  # exists(low - 1) is True, exists(limit - 1) is False
     while high <= limit and exists(high - 1):
         low, high = high, high * 2
-    if high > limit:
-        if exists(limit - 1):
-            return Count(limit, False)
-        high = limit
+    high = min(high, limit)
     while high - low > 1:
         mid = (low + high) // 2
         if exists(mid - 1):

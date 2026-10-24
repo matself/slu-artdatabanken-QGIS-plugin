@@ -10,7 +10,7 @@ Compatible with QGIS 3.44 up to 4.99 (Qt5 and Qt6). The user interface is in Eng
 
 The panel has five collapsible sections, in the same order as SLU Artdatabanken's own search page (Fynddata):
 
-- **Taxa:** one or more names, one per line, matched ignoring case. A species name (`Anemone nemorosa`, `vitsippa`) matches exactly. A genus (`Anemone`, or its Swedish name `sippor`) includes all its species. Names that match nothing in the data are flagged. A Swedish genus name can only be resolved when the data has observations identified to that genus.
+- **Taxa:** one or more names, one per line, matched ignoring case. A species name (`Anemone nemorosa`, `vitsippa`) matches exactly. A genus (`Anemone`, or its Swedish name `sippor`) includes all its species. Names that match nothing in the data are flagged. Without any name, tick **All species**; that is meant for a small map area or a few red list categories, since the count limits stop searches with too many observations. A Swedish genus name can only be resolved when the data has observations identified to that genus.
 - **Time:** all years, current year, previous year, last 5 or 25 years, or a custom range.
 - **Geography:** the current map extent, a county, or all of Sweden.
 - **Properties:** occurrence (observed, not found, both), maximum coordinate uncertainty, uncertain identifications, verified only, red list categories.

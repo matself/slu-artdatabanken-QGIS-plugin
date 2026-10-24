@@ -160,13 +160,14 @@ class SpeciesDataDockWidget(QDockWidget):
             for widget in root.findChildren(widget_type):
                 getattr(widget, signal).connect(self._clear_count)
 
-    def _has_names(self):
-        return bool(self.names.toPlainText().strip())
+    def _can_search(self):
+        """A search needs names, or the explicit choice to search all species."""
+        return self.all_species.isChecked() or bool(self.names.toPlainText().strip())
 
     def _refresh_buttons(self):
-        """Counting and fetching need at least one name, and nothing else running."""
+        """Counting and fetching need names (or all species), and nothing else running."""
         idle = not (self._count_task or self._downloading or self._execute_pending)
-        enabled = idle and self._has_names()
+        enabled = idle and self._can_search()
         self.count_button.setEnabled(enabled)
         self.create_button.setEnabled(enabled)
 
@@ -176,7 +177,9 @@ class SpeciesDataDockWidget(QDockWidget):
         self._stop_count()
         self._count = None
         self._unknown = ()
-        hint = "" if self._has_names() else tr("Enter at least one species or genus name.")
+        hint = "" if self._can_search() else tr(
+            "Enter at least one species or genus name, or tick All species."
+        )
         self.count_label.setText(hint)
 
     def _stop_count(self):
@@ -192,7 +195,7 @@ class SpeciesDataDockWidget(QDockWidget):
             self._clear_count()
 
     def _start_count(self):
-        if not self._has_names():
+        if not self._can_search():
             return
         query = self.build_query()
         self.count_label.setText(tr("Counting observations..."))
@@ -242,7 +245,10 @@ class SpeciesDataDockWidget(QDockWidget):
         hint = QLabel(tr("A genus name (for example Anemone) includes all its species."))
         hint.setWordWrap(True)
         form.addWidget(hint)
-        form.addWidget(QLabel(tr("Species or genus names (required)")))
+        self.all_species = QCheckBox(tr("All species (no name filter)"))
+        self.all_species.toggled.connect(lambda on: self.names.setEnabled(not on))
+        form.addWidget(self.all_species)
+        form.addWidget(QLabel(tr("Species or genus names")))
         form.addWidget(self.names)
         return tab
 
@@ -348,7 +354,7 @@ class SpeciesDataDockWidget(QDockWidget):
         names = tuple(
             self._aliases.get(line.strip(), line.strip())
             for line in self.names.toPlainText().splitlines()
-            if line.strip()
+            if line.strip() and not self.all_species.isChecked()
         )
         date_from, date_to = self._period()
         bbox = self._canvas_bbox() if self.area_canvas.isChecked() else None
@@ -417,7 +423,7 @@ class SpeciesDataDockWidget(QDockWidget):
 
     def on_create(self):
         """Fetch and show: count first (if needed), then download and add the layer."""
-        if not self._has_names():
+        if not self._can_search():
             return
         query = self.build_query()
         self.create_button.setEnabled(False)

@@ -71,3 +71,9 @@ def test_unknown_names_reports_only_the_missing_ones():
         "gulviva",
     )
     assert unknown_names((), lambda n: False) == ()
+
+
+def test_a_search_matching_almost_everything_costs_two_requests():
+    exists, calls = probe_for(10**7)
+    assert count(exists) == Count(100000, False)
+    assert calls == [0, 99999]
