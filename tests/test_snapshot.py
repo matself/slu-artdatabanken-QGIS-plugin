@@ -3,13 +3,16 @@ import json
 
 import pytest
 
+from species_data.counting import CancelledError
 from species_data.query import Query
-from species_data.snapshot import FIELD_NAMES, CancelledError, Row, collect, parse_page
+from species_data.snapshot import CORE_FIELDS, EXTRA_FIELDS, Row, collect, fields_for, parse_page
 from species_data.wfs import request_params
+
+NAMES = tuple(n for n, _ in CORE_FIELDS)
 
 
 def make_row(i):
-    return Row({**dict.fromkeys(FIELD_NAMES), "occurrenceId": f"id{i}"}, float(i), 6000000.0)
+    return Row({**dict.fromkeys(NAMES), "occurrenceId": f"id{i}"}, float(i), 6000000.0)
 
 
 def fake_fetch(total_available, calls=None):
@@ -31,7 +34,7 @@ def test_parse_page_keeps_known_fields_only_and_skips_missing_geometry():
             {"geometry": None, "properties": {"occurrenceId": "b"}},
         ]
     }
-    rows = parse_page(json.dumps(page))
+    rows = parse_page(json.dumps(page), ("occurrenceId", "county"))
     assert len(rows) == 1
     assert (rows[0].x, rows[0].y) == (1.0, 2.0)
     assert rows[0].properties["county"] == "Skåne"
@@ -76,7 +79,7 @@ def test_collect_reports_progress_and_can_be_cancelled():
 
 
 def test_request_params_ask_only_for_listed_fields_plus_geometry():
-    params = request_params(Query(), 2000, 1000, fields=FIELD_NAMES)
+    params = request_params(Query(), 2000, 1000, fields=NAMES)
     names = params["propertyName"].split(",")
     assert names[-1] == "point"
     assert "recordedBy" not in names and "reportedBy" not in names
@@ -86,4 +89,17 @@ def test_request_params_ask_only_for_listed_fields_plus_geometry():
 def test_no_personal_fields_are_requested():
     from species_data.wfs import PERSONAL_FIELDS
 
-    assert not set(PERSONAL_FIELDS) & set(FIELD_NAMES)
+    every = {n for n, _ in CORE_FIELDS} | {n for g in EXTRA_FIELDS.values() for n, _ in g}
+    assert not set(PERSONAL_FIELDS) & every
+
+
+def test_fields_for_adds_conditional_and_extra_fields():
+    names = lambda fields: [n for n, _ in fields]  # noqa: E731
+    base = names(fields_for(Query(exclude_uncertain_identification=True)))
+    assert base == [n for n, _ in CORE_FIELDS]
+    assert "county" in base and "province" in base
+    both = names(fields_for(Query(occurrence="both", exclude_uncertain_identification=False)))
+    assert "isNeverFoundObservation" in both and "isUncertainIdentification" in both
+    extra = names(fields_for(Query(exclude_uncertain_identification=True), ("habitat", "quantity")))
+    assert extra[-3:] == ["habitat", "organismQuantity", "organismQuantityUnit"]
+    assert "occurrenceRemarks" not in base

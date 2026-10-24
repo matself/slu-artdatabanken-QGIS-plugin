@@ -32,7 +32,8 @@ def extract_sources():
             func = node.func
             name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", "")
             first = node.args[0]
-            if name == "tr" and isinstance(first, ast.Constant) and isinstance(first.value, str):
+            is_text = isinstance(first, ast.Constant) and isinstance(first.value, str)
+            if name in ("tr", "tr_noop") and is_text:
                 found.setdefault(context, []).append(first.value)
     return found
 

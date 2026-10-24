@@ -3,7 +3,7 @@ import pytest
 
 from species_data.counting import Count, at_least, count
 from species_data.query import Query
-from species_data.wfs import layer_uri, request_params
+from species_data.wfs import request_params
 
 
 def probe_for(total):
@@ -61,14 +61,3 @@ def test_provenance_mentions_source_and_disclaimer():
     assert "County: Skåne" in text
     assert "not developed, owned or endorsed by SLU" in text
     assert "at least" in provenance.abstract(Query(), Count(100000, False), datetime(2026, 1, 1))
-
-
-def test_layer_uri_for_live_layer():
-    uri = layer_uri("\"municipality\" = 'O''Brien'", restrict_to_map=True)
-    assert uri.startswith("url='https://sosgeo.artdata.slu.se/geoserver/SOS/ows'")
-    assert "restrictToRequestBBOX='1'" in uri
-    assert "version='1.0.0'" in uri
-    assert "O\\'\\'Brien" in uri
-    assert "restrictToRequestBBOX" not in layer_uri("", restrict_to_map=False)
-    assert "filter=" not in layer_uri("", restrict_to_map=False)
-    assert "\'" in layer_uri("\"a\" = 'b'", restrict_to_map=False)

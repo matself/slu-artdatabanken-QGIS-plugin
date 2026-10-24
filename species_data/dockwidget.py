@@ -4,7 +4,6 @@ Code-only (no .ui file, so no uic differences between Qt5 and Qt6). The five
 sections follow the structure of SLU Artdatabanken's own search page, Fynddata,
 and share one scrolling window above the fixed count and create buttons.
 """
-from dataclasses import replace
 from datetime import date, datetime
 
 from qgis.core import (
@@ -14,9 +13,8 @@ from qgis.core import (
     QgsProject,
 )
 from qgis.gui import QgsCollapsibleGroupBox
-from qgis.PyQt.QtCore import QCoreApplication, QDate, Qt, QTimer
+from qgis.PyQt.QtCore import QCoreApplication, QDate, QTimer
 from qgis.PyQt.QtWidgets import (
-    QApplication,
     QCheckBox,
     QComboBox,
     QDateEdit,
@@ -37,9 +35,8 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from . import counting, layers, provenance
+from . import layers, provenance, snapshot
 from .download import CountTask, SnapshotTask
-from .net import NetworkError, feature_probe
 from .query import (
     ABSENT,
     BOTH,
@@ -59,8 +56,24 @@ COUNTIES = (
     "Örebro", "Östergötland",
 )  # fmt: skip
 
-# Data providers known to appear in the open WFS. The full list needs the REST API.
-DATASETS = ((1, "Artportalen"), (19, "iNaturalist"))
+# Searches are limited to Artportalen (data provider id 1). Other data providers need the
+# REST API to list them, and the choice is kept out of the panel for now.
+ARTPORTALEN = 1
+
+def tr_noop(text):
+    """Mark a string for translation without translating it yet (see scripts/translations.py)."""
+    return text
+
+
+EXTRA_FIELD_LABELS = (
+    ("habitat", tr_noop("Habitat")),
+    ("life_stage", tr_noop("Life stage")),
+    ("quantity", tr_noop("Quantity")),
+    ("project", tr_noop("Project")),
+    ("taxon_id", tr_noop("Taxon id (Dyntaxa)")),
+    ("modified", tr_noop("Last modified")),
+    ("remarks", tr_noop("Remarks (free text, may contain personal data)")),
+)
 
 TERMS_URL = "https://www.slu.se/artdatabanken/rapportering-och-fynd/oppna-data-och-apier/api-villkor/"
 
@@ -76,6 +89,8 @@ class SpeciesDataDockWidget(QDockWidget):
         self.setObjectName("SpeciesDataDockWidget")
         self._count = None  # (Query, Count) of the last count
         self._count_task = None
+        self._execute_pending = False  # the button was pressed, waiting for the count
+        self._downloading = False
         # Count a moment after the last change, so typing does not send a request per key.
         self._count_timer = QTimer(self)
         self._count_timer.setSingleShot(True)
@@ -91,7 +106,7 @@ class SpeciesDataDockWidget(QDockWidget):
             (tr("Time"), self._time_tab),
             (tr("Geography"), self._geography_tab),
             (tr("Properties"), self._properties_tab),
-            (tr("Datasets"), self._datasets_tab),
+            (tr("Extra fields"), self._extra_fields_tab),
         ):
             box = QgsCollapsibleGroupBox(title)
             QVBoxLayout(box).addWidget(build())
@@ -107,21 +122,15 @@ class SpeciesDataDockWidget(QDockWidget):
         self.count_label.setWordWrap(True)
         self.progress = QProgressBar()
         self.progress.setVisible(False)
-        self.layer_kind = QComboBox()
-        self.layer_kind.addItem(tr("Live layer (follows the map window)"), "live")
-        self.layer_kind.addItem(tr("Snapshot (downloaded and saved as GeoPackage)"), "snapshot")
-        self.create_button = QPushButton()
+        self.create_button = QPushButton(tr("Fetch and show observations"))
         self.create_button.clicked.connect(self.on_create)
-        self.layer_kind.currentIndexChanged.connect(self._update_create_button)
-        self._update_create_button()
         layout.addWidget(self.count_label)
         layout.addWidget(self.progress)
-        layout.addWidget(self.layer_kind)
         layout.addWidget(self.create_button)
 
         source = QLabel(
             tr(
-                "Data: SLU Artdatabanken, Species Observation System. "
+                "Data: Artportalen, via SLU Artdatabanken, Species Observation System. "
                 "Independent plugin, not owned or endorsed by SLU. "
                 '<a href="{url}">Terms of use</a>.'
             ).format(url=TERMS_URL)
@@ -147,17 +156,11 @@ class SpeciesDataDockWidget(QDockWidget):
         )
         for widget_type, signal in signals:
             for widget in root.findChildren(widget_type):
-                if widget is not self.layer_kind:
-                    getattr(widget, signal).connect(self._clear_count)
-
-    def _update_create_button(self, *_):
-        if self.layer_kind.currentData() == "live":
-            self.create_button.setText(tr("Add live layer to the map"))
-        else:
-            self.create_button.setText(tr("Download snapshot and add to the map"))
+                getattr(widget, signal).connect(self._clear_count)
 
     def _clear_count(self, *_):
         """The inputs changed: forget the old count and schedule a new one."""
+        self._execute_pending = False
         self._stop_count()
         self._count = None
         self.count_label.setText(tr("Counting observations..."))
@@ -170,7 +173,8 @@ class SpeciesDataDockWidget(QDockWidget):
         self.progress.setVisible(False)
 
     def _map_moved(self):
-        if self.area_canvas.isChecked():
+        # The search is for the map window at the time of the click: let it finish.
+        if self.area_canvas.isChecked() and not (self._execute_pending or self._downloading):
             self._clear_count()
 
     def _start_count(self):
@@ -185,11 +189,16 @@ class SpeciesDataDockWidget(QDockWidget):
             self.progress.setVisible(False)
             self._count = (query, result)
             self._show_count(result)
+            if self._execute_pending:
+                self._execute_pending = False
+                self._proceed(query, result)
 
         def failed(message):
             if task is self._count_task:
                 self._count_task = None
+                self._execute_pending = False
                 self.progress.setVisible(False)
+                self.create_button.setEnabled(True)
                 self.count_label.setText(message)
 
         task = CountTask(query, done, failed)
@@ -297,14 +306,14 @@ class SpeciesDataDockWidget(QDockWidget):
         for code, box in self.redlist.items():
             box.setChecked(code in THREATENED_CATEGORIES)
 
-    def _datasets_tab(self):
+    def _extra_fields_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.addWidget(QLabel(tr("None selected: all datasets")))
-        self.datasets = {}
-        for provider_id, name in DATASETS:
-            check = QCheckBox(name)
-            self.datasets[provider_id] = check
+        layout.addWidget(QLabel(tr("The standard fields are always included.")))
+        self.extras = {}
+        for key, label in EXTRA_FIELD_LABELS:
+            check = QCheckBox(tr(label))
+            self.extras[key] = check
             layout.addWidget(check)
         layout.addStretch()
         return tab
@@ -329,7 +338,7 @@ class SpeciesDataDockWidget(QDockWidget):
             exclude_uncertain_identification=not self.include_uncertain.isChecked(),
             max_uncertainty_m=self.max_uncertainty.value() or None,
             redlist_categories=tuple(c for c, box in self.redlist.items() if box.isChecked()),
-            dataset_ids=tuple(i for i, box in self.datasets.items() if box.isChecked()),
+            dataset_ids=(ARTPORTALEN,),
         )
 
     def _period(self):
@@ -358,16 +367,6 @@ class SpeciesDataDockWidget(QDockWidget):
 
     # -- actions -----------------------------------------------------------
 
-    def _run_count(self, query):
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        try:
-            return counting.count(feature_probe(query))
-        except NetworkError as exc:
-            QMessageBox.warning(self, tr("Species Data"), str(exc))
-            return None
-        finally:
-            QApplication.restoreOverrideCursor()
-
     def _show_count(self, result):
         assessment = assess_count(result.value)
         number = f"{result.value:,}".replace(",", " ")
@@ -384,17 +383,21 @@ class SpeciesDataDockWidget(QDockWidget):
         return assessment
 
     def on_create(self):
+        """Fetch and show: count first (if needed), then download and add the layer."""
         query = self.build_query()
-        if self._count is None or self._count[0] != query:
-            self._count_timer.stop()
-            self._stop_count()
-            result = self._run_count(query)
-            if result is None:
-                return
-            self._count = (query, result)
-        result = self._count[1]
+        self.create_button.setEnabled(False)
+        if self._count is not None and self._count[0] == query:
+            self._proceed(query, self._count[1])
+            return
+        self._execute_pending = True
+        self._count_timer.stop()
+        if self._count_task is None:
+            self._start_count()
+
+    def _proceed(self, query, result):
         assessment = self._show_count(result)
         if assessment.at_least:
+            self.create_button.setEnabled(True)
             QMessageBox.warning(
                 self,
                 tr("Species Data"),
@@ -405,65 +408,61 @@ class SpeciesDataDockWidget(QDockWidget):
             answer = QMessageBox.question(
                 self,
                 tr("Species Data"),
-                tr("The layer will load about {n} observations. Continue?").format(n=result.value),
+                tr("About {n} observations will be fetched. Continue?").format(n=result.value),
             )
             if answer != QMessageBox.StandardButton.Yes:
+                self.create_button.setEnabled(True)
                 return
-        if self.layer_kind.currentData() == "live":
-            self._create_live_layer(query, result)
-        else:
-            self._create_snapshot(query, result)
+        self._download(query, result)
 
-    def _create_live_layer(self, query, result):
-        follow_map = query.bbox_wgs84 is not None
-        # QGIS adds the map window to every request itself.
-        layer_query = replace(query, bbox_wgs84=None)
-        name = self._layer_name(query, None)
-        layer = layers.create_live_layer(layer_query, name, result, follow_map)
-        if layer is None:
-            QMessageBox.warning(self, tr("Species Data"), tr("The layer could not be opened."))
-            return
-        QgsProject.instance().addMapLayer(layer)
-        self._announce()
-
-    def _create_snapshot(self, query, result):
-        self.create_button.setEnabled(False)
+    def _download(self, query, result):
+        extras = tuple(key for key, box in self.extras.items() if box.isChecked())
+        fields = snapshot.fields_for(query, extras)
+        name = self._layer_name(query, result)
+        self._downloading = True
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
         self.progress.setVisible(True)
-        self.count_label.setText(tr("Downloading observations..."))
-        name = self._layer_name(query, result)
+        self.count_label.setText(tr("Fetching and showing observations..."))
 
         def finish():
+            self._downloading = False
             self.create_button.setEnabled(True)
             self.progress.setVisible(False)
-            self._show_count(result)
 
         def done(rows):
             finish()
-            layer = layers.create_snapshot_layer(rows, query, name, result)
+            layer = layers.create_snapshot_layer(rows, fields, query, name, result)
             if layer is None:
+                self._show_count(result)
                 QMessageBox.warning(self, tr("Species Data"), tr("The layer could not be saved."))
                 return
             QgsProject.instance().addMapLayer(layer)
-            self._announce()
+            self.count_label.setText(tr("Showing {n} observations.").format(n=len(rows)))
+            self.iface.messageBar().pushMessage(
+                tr("Species Data"), provenance.citation(datetime.now()), duration=8
+            )
 
         def failed(message):
             finish()
+            self._show_count(result)
             QMessageBox.warning(self, tr("Species Data"), message)
 
-        self._task = SnapshotTask(query, result.value, done, failed)
-        self._task.progressChanged.connect(lambda value: self.progress.setValue(int(value)))
-        self._task.taskTerminated.connect(finish)
-        QgsApplication.taskManager().addTask(self._task)
+        def progressed(value):
+            self.progress.setValue(int(value))
+            fetched = int(result.value * value / 100)
+            self.count_label.setText(
+                tr("Fetching and showing observations: {done} of {total}").format(
+                    done=fetched, total=result.value
+                )
+            )
 
-    def _announce(self):
-        self.iface.messageBar().pushMessage(
-            tr("Species Data"), provenance.citation(datetime.now()), duration=8
-        )
+        self._task = SnapshotTask(query, fields, result.value, done, failed)
+        self._task.progressChanged.connect(progressed)
+        self._task.taskTerminated.connect(lambda: (finish(), self._show_count(result)))
+        QgsApplication.taskManager().addTask(self._task)
 
     @staticmethod
     def _layer_name(query, result):
         what = ", ".join(query.names) if query.names else (query.organism_group or tr("Species"))
-        return f"{what} ({result.value})" if result else what
-
+        return f"{what} ({result.value})"

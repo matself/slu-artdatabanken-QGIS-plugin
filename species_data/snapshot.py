@@ -9,33 +9,57 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 from .counting import CancelledError
+from .query import PRESENT
 
 # (WFS property, type) where type is one of: str, int, bool, date.
-FIELDS = (
+# Always downloaded, in this order.
+CORE_FIELDS = (
     ("occurrenceId", "str"),
     ("url", "str"),
     ("scientificName", "str"),
     ("vernacularName", "str"),
-    ("dyntaxaTaxonId", "int"),
-    ("organismGroup", "str"),
     ("startDate", "date"),
     ("endDate", "date"),
-    ("county", "str"),
-    ("municipality", "str"),
     ("locality", "str"),
+    ("municipality", "str"),
+    ("county", "str"),
+    ("province", "str"),
     ("coordinateUncertaintyInMeters", "int"),
+    ("isVerified", "bool"),
+    ("redlistCategory", "str"),
+    ("datasetName", "str"),
+)
+# Extra fields the user can switch on, as {group key: fields}. Free text such as
+# ``occurrenceRemarks`` can contain personal data and is therefore off by default.
+EXTRA_FIELDS = {
+    "habitat": (("habitat", "str"),),
+    "life_stage": (("lifeStage", "str"),),
+    "quantity": (("organismQuantity", "str"), ("organismQuantityUnit", "str")),
+    "project": (("project1Name", "str"),),
+    "taxon_id": (("dyntaxaTaxonId", "int"),),
+    "modified": (("modified", "str"),),
+    "remarks": (("occurrenceRemarks", "str"),),
+}
+# Added only when the search can return them.
+_ABSENCE_FIELDS = (
     ("isPresentObservation", "bool"),
     ("isNotRediscoveredObservation", "bool"),
     ("isNeverFoundObservation", "bool"),
-    ("isVerified", "bool"),
-    ("isUncertainIdentification", "bool"),
-    ("redlistCategory", "str"),
-    ("dataProviderId", "int"),
-    ("datasetName", "str"),
-    ("organismQuantity", "str"),
-    ("organismQuantityUnit", "str"),
 )
-FIELD_NAMES = tuple(name for name, _ in FIELDS)
+_UNCERTAIN_FIELD = ("isUncertainIdentification", "bool")
+
+
+def fields_for(query, extras=()) -> tuple:
+    """The (name, type) pairs to download for ``query`` and the chosen extra groups."""
+    fields = list(CORE_FIELDS)
+    if query.occurrence != PRESENT:
+        fields += _ABSENCE_FIELDS
+    if not query.exclude_uncertain_identification:
+        fields.append(_UNCERTAIN_FIELD)
+    for key in extras:
+        fields += EXTRA_FIELDS[key]
+    return tuple(fields)
+
 
 PAGE_SIZE = 1000
 
@@ -47,7 +71,7 @@ class Row:
     y: float
 
 
-def parse_page(text: str) -> list:
+def parse_page(text: str, field_names: tuple) -> list:
     """Rows of a GeoJSON page. Features without a point geometry are skipped."""
     rows = []
     for feature in json.loads(text).get("features", []):
@@ -55,7 +79,7 @@ def parse_page(text: str) -> list:
         if geometry.get("type") != "Point":
             continue
         x, y = geometry["coordinates"][:2]
-        rows.append(Row({n: feature["properties"].get(n) for n in FIELD_NAMES}, x, y))
+        rows.append(Row({n: feature["properties"].get(n) for n in field_names}, x, y))
     return rows
 
 

@@ -8,3 +8,7 @@ dist/
 build/
 .idea/
 .vscode/
+
+# local test exports may contain personal data
+tests/*.geojson
+tests/*.qmd

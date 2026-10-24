@@ -4,16 +4,40 @@
   <context>
     <name>SpeciesDataDockWidget</name>
     <message>
+      <source>Habitat</source>
+      <translation>Habitat</translation>
+    </message>
+    <message>
+      <source>Life stage</source>
+      <translation>Utvecklingsstadium</translation>
+    </message>
+    <message>
+      <source>Quantity</source>
+      <translation>Antal</translation>
+    </message>
+    <message>
+      <source>Project</source>
+      <translation>Projekt</translation>
+    </message>
+    <message>
+      <source>Taxon id (Dyntaxa)</source>
+      <translation>Taxon-id (Dyntaxa)</translation>
+    </message>
+    <message>
+      <source>Last modified</source>
+      <translation>Senast ändrad</translation>
+    </message>
+    <message>
+      <source>Remarks (free text, may contain personal data)</source>
+      <translation>Anmärkningar (fritext, kan innehålla personuppgifter)</translation>
+    </message>
+    <message>
       <source>Species Data (SLU Artdatabanken)</source>
       <translation>Artdata (SLU Artdatabanken)</translation>
     </message>
     <message>
-      <source>Live layer (follows the map window)</source>
-      <translation>Levande lager (följer kartfönstret)</translation>
-    </message>
-    <message>
-      <source>Snapshot (downloaded and saved as GeoPackage)</source>
-      <translation>Ögonblicksbild (hämtas och sparas som GeoPackage)</translation>
+      <source>Fetch and show observations</source>
+      <translation>Hämta och visa fynd</translation>
     </message>
     <message>
       <source>Counting observations...</source>
@@ -118,12 +142,8 @@
       <translation>CR, EN, VU, NT</translation>
     </message>
     <message>
-      <source>Downloading observations...</source>
-      <translation>Hämtar fynd...</translation>
-    </message>
-    <message>
-      <source>Species Data</source>
-      <translation>Artdata</translation>
+      <source>Fetching and showing observations...</source>
+      <translation>Hämtar och visar fynd...</translation>
     </message>
     <message>
       <source>Taxa</source>
@@ -142,40 +162,32 @@
       <translation>Fyndegenskaper</translation>
     </message>
     <message>
-      <source>Datasets</source>
-      <translation>Dataset</translation>
-    </message>
-    <message>
-      <source>Add live layer to the map</source>
-      <translation>Lägg till levande lager i kartan</translation>
-    </message>
-    <message>
-      <source>Download snapshot and add to the map</source>
-      <translation>Hämta ögonblicksbild och lägg till i kartan</translation>
+      <source>Extra fields</source>
+      <translation>Extrafält</translation>
     </message>
     <message>
       <source>Species names (leave empty for all species)</source>
       <translation>Artnamn (lämna tomt för alla arter)</translation>
     </message>
     <message>
-      <source>None selected: all datasets</source>
-      <translation>Ingen vald: alla dataset</translation>
+      <source>The standard fields are always included.</source>
+      <translation>Standardfälten ingår alltid.</translation>
+    </message>
+    <message>
+      <source>Species Data</source>
+      <translation>Artdata</translation>
     </message>
     <message>
       <source>The search matches too many observations. Narrow it down.</source>
       <translation>Sökningen ger för många fynd. Avgränsa den.</translation>
     </message>
     <message>
-      <source>The layer could not be opened.</source>
-      <translation>Lagret kunde inte öppnas.</translation>
-    </message>
-    <message>
       <source>Species</source>
       <translation>Arter</translation>
     </message>
     <message>
-      <source>Data: SLU Artdatabanken, Species Observation System. Independent plugin, not owned or endorsed by SLU. &lt;a href="{url}"&gt;Terms of use&lt;/a&gt;.</source>
-      <translation>Data: SLU Artdatabanken, Species Observation System. Fristående plugin som inte ägs eller stöds av SLU. &lt;a href="{url}"&gt;Användarvillkor&lt;/a&gt;.</translation>
+      <source>Data: Artportalen, via SLU Artdatabanken, Species Observation System. Independent plugin, not owned or endorsed by SLU. &lt;a href="{url}"&gt;Terms of use&lt;/a&gt;.</source>
+      <translation>Data: Artportalen, via SLU Artdatabanken, Species Observation System. Fristående plugin som inte ägs eller stöds av SLU. &lt;a href="{url}"&gt;Användarvillkor&lt;/a&gt;.</translation>
     </message>
     <message>
       <source>At least {n} observations: too many. Narrow the search.</source>
@@ -194,8 +206,16 @@
       <translation>Ungefär {n} fynd.</translation>
     </message>
     <message>
-      <source>The layer will load about {n} observations. Continue?</source>
-      <translation>Lagret kommer att läsa in ungefär {n} fynd. Fortsätta?</translation>
+      <source>About {n} observations will be fetched. Continue?</source>
+      <translation>Ungefär {n} fynd kommer att hämtas. Fortsätta?</translation>
+    </message>
+    <message>
+      <source>Showing {n} observations.</source>
+      <translation>Visar {n} fynd.</translation>
+    </message>
+    <message>
+      <source>Fetching and showing observations: {done} of {total}</source>
+      <translation>Hämtar och visar fynd: {done} av {total}</translation>
     </message>
   </context>
   <context>

@@ -37,28 +37,4 @@ def request_params(
     return params
 
 
-def layer_uri(expression: str, restrict_to_map: bool, page_size: int = 1000) -> str:
-    """QGIS WFS provider URI for a live layer.
-
-    ``restrict_to_map`` makes QGIS request only the features in the map window.
-    """
-    parts = {
-        "url": WFS_URL,
-        "typename": TYPE_NAME,
-        "version": WFS_VERSION,
-        "srsname": CRS,
-        "pagingEnabled": "true",
-        "pageSize": str(page_size),
-    }
-    if restrict_to_map:
-        parts["restrictToRequestBBOX"] = "1"
-    if expression:
-        parts["filter"] = expression
-    return " ".join(f"{key}={_uri_quote(value)}" for key, value in parts.items())
-
-
-def _uri_quote(value: str) -> str:
-    return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
-
-
-__all__ = ["WFS_PAGING_LIMIT", "layer_uri", "request_params"]
+__all__ = ["WFS_PAGING_LIMIT", "request_params"]

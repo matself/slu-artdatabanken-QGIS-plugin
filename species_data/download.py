@@ -14,9 +14,10 @@ from .wfs import WFS_URL, request_params
 class SnapshotTask(QgsTask):
     """Fetch all matching observations page by page. Cancel stops between requests."""
 
-    def __init__(self, query: Query, total: int, on_done, on_error):
-        super().__init__("Species Data: downloading observations", QgsTask.Flag.CanCancel)
+    def __init__(self, query: Query, fields: tuple, total: int, on_done, on_error):
+        super().__init__("Species Data: fetching observations", QgsTask.Flag.CanCancel)
         self.query = query
+        self.fields = fields
         self.total = total
         self._on_done = on_done
         self._on_error = on_error
@@ -50,9 +51,8 @@ class SnapshotTask(QgsTask):
             self._on_error(self._error)
 
     def _fetch_page(self, start, size):
-        params = request_params(
-            self.query, start_index=start, max_features=size, fields=snapshot.FIELD_NAMES
-        )
+        names = tuple(name for name, _ in self.fields)
+        params = request_params(self.query, start_index=start, max_features=size, fields=names)
         url = f"{WFS_URL}?{urlencode(params)}"
         request = QNetworkRequest(QUrl.fromEncoded(url.encode("ascii")))
         blocking = QgsBlockingNetworkRequest()
@@ -62,7 +62,9 @@ class SnapshotTask(QgsTask):
                 raise counting.CancelledError()
             raise NetworkError(blocking.errorMessage())
         try:
-            return snapshot.parse_page(bytes(blocking.reply().content()).decode("utf-8"))
+            return snapshot.parse_page(
+                bytes(blocking.reply().content()).decode("utf-8"), tuple(n for n, _ in self.fields)
+            )
         except (ValueError, KeyError) as exc:
             raise NetworkError("The service did not return GeoJSON") from exc
 
