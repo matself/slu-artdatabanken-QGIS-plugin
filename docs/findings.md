@@ -38,6 +38,8 @@ Tested in QGIS 3.44.2 with `version=1.0.0`, `pagingEnabled=true`, `pageSize=1000
 - **QGIS paging goes past 5000.** One layer loaded 15 967 features. The 5000 cap applies per request only. A QGIS WFS layer can therefore pull tens of thousands of features (up to startIndex 100 000), which is slow (about 23 seconds for 16 000) and heavy on the server. Counting before creating the layer is required, and the user needs a hard limit to choose, not just a warning.
 - `restrictToRequestBBOX='1'` is accepted by the provider; the effect on requests was not inspected.
 
+> Note: live WFS layers were tried and dropped (see PLAN.md, status). The findings below about the QGIS provider are kept as a record.
+
 ### Update: the filter must be OGC XML, not CQL
 - `bbox` and `CQL_FILTER` are mutually exclusive on the service ("bbox and cql_filter both specified but are mutually exclusive").
 - CQL `BBOX(...)` and `INTERSECTS(...)` fail in the service's CQL parser.

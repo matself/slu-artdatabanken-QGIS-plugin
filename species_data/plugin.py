@@ -1,13 +1,11 @@
 """Main plugin class for Species Data (SLU Artdatabanken)."""
 from pathlib import Path
 
-from qgis.core import QgsApplication
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator
 from qgis.PyQt.QtGui import QIcon
 
 from .compat import QAction
 from .dockwidget import SpeciesDataDockWidget
-from .provider import SpeciesDataProvider
 
 
 class SpeciesDataPlugin:
@@ -19,7 +17,6 @@ class SpeciesDataPlugin:
         self.action = None
         self.menu_name = None
         self.dock = None
-        self.provider = None
         self.translator = None
         self._load_translation()
 
@@ -43,9 +40,6 @@ class SpeciesDataPlugin:
         self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu("&" + self.menu_name, self.action)
 
-        self.provider = SpeciesDataProvider()
-        QgsApplication.processingRegistry().addProvider(self.provider)
-
     def unload(self):
         self.iface.removePluginMenu("&" + self.menu_name, self.action)
         self.iface.removeToolBarIcon(self.action)
@@ -55,9 +49,6 @@ class SpeciesDataPlugin:
             self.iface.removeDockWidget(self.dock)
             self.dock.deleteLater()
             self.dock = None
-        if self.provider is not None:
-            QgsApplication.processingRegistry().removeProvider(self.provider)
-            self.provider = None
         if self.translator is not None:
             QCoreApplication.removeTranslator(self.translator)
             self.translator = None

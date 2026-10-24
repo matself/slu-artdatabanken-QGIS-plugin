@@ -3,6 +3,19 @@
 Status: planeringsfas, ingen kod skriven. Datum: 2026-10-24. Ägare: Mats (GitHub: matself).
 Detta dokument är tänkt som startpunkt för arbete i Claude Code. Läs avsnitt 2 och 3 innan något byggs: de skiljer det som är verifierat från det som bara antagits.
 
+## Status 2026-10-24 (milstolpe 1)
+
+Avsnitten nedan är den ursprungliga planen. Det som faktiskt byggdes och avvek:
+
+- Namn: "Species Data (SLU Artdatabanken)" / "Artdata (SLU Artdatabanken)", paketet heter `species_data`. Supportmejlet är skickat (`docs/supportmail-skickat.md`), svar saknas.
+- Inget API-nyckel behövs i denna version: allt går via den öppna WFS-tjänsten. Auth, taxonomisökning (Dyntaxa) och REST-sökning är inte byggda. `Query.to_sos_filter()` är förberedd men oanvänd.
+- Endast kärlväxter och endast Artportalen (dataProviderId 1). Skyddade fynd hanteras aldrig (fas 4 utgår).
+- WFS-filter: OGC-XML, inte CQL (se `docs/findings.md`). `resultType=hits` fungerar inte: antal räknas genom sökning med `startIndex`.
+- Levande WFS-lager provades men ströks: en sökning hämtas i bakgrunden och visas som ett tillfälligt lager, färgat per år. Användaren sparar med QGIS egna verktyg. Ingen GeoPackage-skrivning i pluginet.
+- Panelen: fem hopfällbara sektioner enligt Fynddata, knapp för att räkna, knapp för att hämta och visa, förloppsindikatorer, varning för felstavade artnamn.
+- Processing-algoritmer (fas 3) är inte påbörjade; mallens exempelalgoritm är borttagen.
+- Ej gjort: stilförinställningar utöver år, klick till Artportalen (kan göras med Ctrl-klick i attributtabellen), QField-anpassning, paketering för plugins.qgis.org.
+
 ## 1. Mål och avgränsning
 
 Ett öppet QGIS-plugin som låter botanister bygga **prickkartor** av artfynd från SLU Artdatabankens Species Observation System (SOS), utan att behöva kunna API:er eller CQL.

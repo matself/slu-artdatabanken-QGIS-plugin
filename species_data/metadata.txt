@@ -16,6 +16,6 @@ tags=
 experimental=True
 deprecated=False
 license=GPL-2.0-or-later
-hasProcessingProvider=yes
+hasProcessingProvider=no
 changelog=
     0.1.0 - Initial version

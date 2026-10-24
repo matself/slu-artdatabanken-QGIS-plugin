@@ -9,11 +9,9 @@ from datetime import date
 from typing import Optional
 from xml.sax.saxutils import escape
 
-# One WFS request returns at most this many features and reports it as
-# ``numberMatched`` even when more exist, so that number is never a total.
-WFS_REQUEST_CAP = 5000
-# Paging works up to this start index. A QGIS WFS layer pages automatically, so
-# it can load far more than one request's worth: count before creating it.
+# Paging on the WFS works up to this start index. One request returns at most 5000
+# features and reports that as ``numberMatched`` even when more exist, so that number is
+# never a total: counting probes with start indexes instead (see counting.py).
 WFS_PAGING_LIMIT = 100000
 # Warn the user well before the limit. A dot map of this many points is already
 # too much to be useful.

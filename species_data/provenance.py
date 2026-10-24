@@ -5,7 +5,6 @@ from .counting import Count
 from .query import Query
 
 SOURCE = "SLU Artdatabanken, Species Observation System"
-SERVICE = "https://sosgeo.artdata.slu.se/geoserver/SOS/ows"
 DISCLAIMER = (
     "Created with the independent plugin Species Data (SLU Artdatabanken). "
     "The plugin is not developed, owned or endorsed by SLU."
