@@ -24,6 +24,11 @@ class Count:
     exact: bool  # False when ``value`` is a lower bound (limit reached)
 
 
+def unknown_names(names, name_exists) -> tuple:
+    """The names for which ``name_exists(name)`` is False, for example misspelled ones."""
+    return tuple(name for name in names if not name_exists(name))
+
+
 def at_least(exists: Probe, threshold: int) -> bool:
     """True when the result holds at least ``threshold`` features. One request."""
     return exists(threshold - 1)

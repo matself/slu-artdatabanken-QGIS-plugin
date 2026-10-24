@@ -61,3 +61,13 @@ def test_provenance_mentions_source_and_disclaimer():
     assert "County: Skåne" in text
     assert "not developed, owned or endorsed by SLU" in text
     assert "at least" in provenance.abstract(Query(), Count(100000, False), datetime(2026, 1, 1))
+
+
+def test_unknown_names_reports_only_the_missing_ones():
+    from species_data.counting import unknown_names
+
+    known = {"vitsippa", "gullviva"}
+    assert unknown_names(("vitsippa", "gulviva", "Gullviva"), lambda n: n.lower() in known) == (
+        "gulviva",
+    )
+    assert unknown_names((), lambda n: False) == ()

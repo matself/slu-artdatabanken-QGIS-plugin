@@ -40,6 +40,7 @@ from .download import CountTask, SnapshotTask
 from .query import (
     ABSENT,
     BOTH,
+    DEFAULT_ORGANISM_GROUP,
     PRESENT,
     REDLIST_CATEGORIES,
     THREATENED_CATEGORIES,
@@ -88,6 +89,7 @@ class SpeciesDataDockWidget(QDockWidget):
         self.iface = iface
         self.setObjectName("SpeciesDataDockWidget")
         self._count = None  # (Query, Count) of the last count
+        self._unknown = ()  # names in the last count that match nothing in the data
         self._count_task = None
         self._execute_pending = False  # the button was pressed, waiting for the count
         self._downloading = False
@@ -163,6 +165,7 @@ class SpeciesDataDockWidget(QDockWidget):
         self._execute_pending = False
         self._stop_count()
         self._count = None
+        self._unknown = ()
         self.count_label.setText(tr("Counting observations..."))
         self._count_timer.start()
 
@@ -182,12 +185,13 @@ class SpeciesDataDockWidget(QDockWidget):
         self.progress.setRange(0, 0)  # busy: the number of requests is not known in advance
         self.progress.setVisible(True)
 
-        def done(result):
+        def done(result, unknown):
             if task is not self._count_task:
                 return  # superseded by a newer search
             self._count_task = None
             self.progress.setVisible(False)
             self._count = (query, result)
+            self._unknown = unknown
             self._show_count(result)
             if self._execute_pending:
                 self._execute_pending = False
@@ -210,14 +214,14 @@ class SpeciesDataDockWidget(QDockWidget):
     def _taxa_tab(self):
         tab = QWidget()
         form = QVBoxLayout(tab)
-        self.vascular_only = QCheckBox(tr("Vascular plants only"))
-        self.vascular_only.setChecked(True)
+        scope = QLabel(tr("This version searches vascular plants (Kärlväxter) only."))
+        scope.setWordWrap(True)
         self.names = QPlainTextEdit()
         self.names.setMaximumHeight(80)
         self.names.setPlaceholderText(
             tr("One species name per line, scientific or Swedish\n(for example: vitsippa)")
         )
-        form.addWidget(self.vascular_only)
+        form.addWidget(scope)
         form.addWidget(QLabel(tr("Species names (leave empty for all species)")))
         form.addWidget(self.names)
         return tab
@@ -327,7 +331,7 @@ class SpeciesDataDockWidget(QDockWidget):
         date_from, date_to = self._period()
         bbox = self._canvas_bbox() if self.area_canvas.isChecked() else None
         return Query(
-            organism_group="Kärlväxter" if self.vascular_only.isChecked() else None,
+            organism_group=DEFAULT_ORGANISM_GROUP,
             names=names,
             county=self.county.currentText() if self.area_county.isChecked() else None,
             bbox_wgs84=bbox,
@@ -379,6 +383,9 @@ class SpeciesDataDockWidget(QDockWidget):
             ).format(n=number, w=WARN_THRESHOLD)
         else:
             text = tr("About {n} observations.").format(n=number)
+        if self._unknown:
+            warning = tr("No vascular plant has the name: {names}. Check the spelling.")
+            text += "\n" + warning.format(names=", ".join(self._unknown))
         self.count_label.setText(text)
         return assessment
 
@@ -396,6 +403,12 @@ class SpeciesDataDockWidget(QDockWidget):
 
     def _proceed(self, query, result):
         assessment = self._show_count(result)
+        if result.value == 0:
+            self.create_button.setEnabled(True)
+            QMessageBox.information(
+                self, tr("Species Data"), tr("No observations match the search.")
+            )
+            return
         if assessment.at_least:
             self.create_button.setEnabled(True)
             QMessageBox.warning(

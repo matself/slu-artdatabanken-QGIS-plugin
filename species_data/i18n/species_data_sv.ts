@@ -44,8 +44,8 @@
       <translation>Räknar fynd...</translation>
     </message>
     <message>
-      <source>Vascular plants only</source>
-      <translation>Endast kärlväxter</translation>
+      <source>This version searches vascular plants (Kärlväxter) only.</source>
+      <translation>Den här versionen söker bara kärlväxter.</translation>
     </message>
     <message>
       <source>One species name per line, scientific or Swedish
@@ -142,6 +142,10 @@
       <translation>CR, EN, VU, NT</translation>
     </message>
     <message>
+      <source>No vascular plant has the name: {names}. Check the spelling.</source>
+      <translation>Ingen kärlväxt har namnet: {names}. Kontrollera stavningen.</translation>
+    </message>
+    <message>
       <source>Fetching and showing observations...</source>
       <translation>Hämtar och visar fynd...</translation>
     </message>
@@ -176,6 +180,10 @@
     <message>
       <source>Species Data</source>
       <translation>Artdata</translation>
+    </message>
+    <message>
+      <source>No observations match the search.</source>
+      <translation>Inga fynd matchar sökningen.</translation>
     </message>
     <message>
       <source>The search matches too many observations. Narrow it down.</source>
