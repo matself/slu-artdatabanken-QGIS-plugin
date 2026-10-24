@@ -1,0 +1,21 @@
+[general]
+name=SLU Artdatabanken
+qgisMinimumVersion=3.34
+qgisMaximumVersion=4.99
+description=To search, visualise and optionally download species information from SLU Artdatabanken open endpoints.
+version=0.1.0
+author=Mats Elfström
+email=mats.elfstrom@gmail.com
+about=To search, visualise and optionally download species information from SLU Artdatabanken open endpoints. Replace this with a longer description in English.
+tracker=https://github.com/matself/slu-artdatabanken/issues
+repository=https://github.com/matself/slu-artdatabanken
+homepage=https://github.com/matself/slu-artdatabanken
+category=Plugins
+icon=icon.svg
+tags=
+experimental=True
+deprecated=False
+license=GPL-2.0-or-later
+hasProcessingProvider=yes
+changelog=
+    0.1.0 - Initial version
