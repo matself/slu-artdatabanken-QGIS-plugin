@@ -70,7 +70,6 @@ def tr_noop(text):
 EXTRA_FIELD_LABELS = (
     ("habitat", tr_noop("Habitat")),
     ("life_stage", tr_noop("Life stage")),
-    ("quantity", tr_noop("Quantity")),
     ("project", tr_noop("Project")),
     ("taxon_id", tr_noop("Taxon id (Dyntaxa)")),
     ("modified", tr_noop("Last modified")),

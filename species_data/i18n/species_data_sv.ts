@@ -12,10 +12,6 @@
       <translation>Utvecklingsstadium</translation>
     </message>
     <message>
-      <source>Quantity</source>
-      <translation>Antal</translation>
-    </message>
-    <message>
       <source>Project</source>
       <translation>Projekt</translation>
     </message>

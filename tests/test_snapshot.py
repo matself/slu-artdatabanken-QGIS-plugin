@@ -100,8 +100,9 @@ def test_fields_for_adds_conditional_and_extra_fields():
     assert "county" in base and "province" in base
     both = names(fields_for(Query(occurrence="both", exclude_uncertain_identification=False)))
     assert "isNeverFoundObservation" in both and "isUncertainIdentification" in both
-    extra = names(fields_for(Query(exclude_uncertain_identification=True), ("habitat", "quantity")))
-    assert extra[-3:] == ["habitat", "organismQuantity", "organismQuantityUnit"]
+    extra = names(fields_for(Query(exclude_uncertain_identification=True), ("habitat", "project")))
+    assert extra[-2:] == ["habitat", "project1Name"]
+    assert "organismQuantity" in base and "organismQuantityUnit" in base
     assert "occurrenceRemarks" not in base
 
 

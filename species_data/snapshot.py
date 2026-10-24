@@ -27,6 +27,8 @@ CORE_FIELDS = (
     ("coordinateUncertaintyInMeters", "int"),
     ("isVerified", "bool"),
     ("redlistCategory", "str"),
+    ("organismQuantity", "str"),
+    ("organismQuantityUnit", "str"),
     ("datasetName", "str"),
 )
 # Extra fields the user can switch on, as {group key: fields}. Free text such as
@@ -34,7 +36,6 @@ CORE_FIELDS = (
 EXTRA_FIELDS = {
     "habitat": (("habitat", "str"),),
     "life_stage": (("lifeStage", "str"),),
-    "quantity": (("organismQuantity", "str"), ("organismQuantityUnit", "str")),
     "project": (("project1Name", "str"),),
     "taxon_id": (("dyntaxaTaxonId", "int"),),
     "modified": (("modified", "str"),),

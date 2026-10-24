@@ -14,7 +14,7 @@ The panel has five collapsible sections, in the same order as SLU Artdatabanken'
 - **Time:** all years, current year, previous year, last 5 or 25 years, or a custom range.
 - **Geography:** the current map extent, a county, or all of Sweden.
 - **Properties:** occurrence (observed, not found, both), maximum coordinate uncertainty, uncertain identifications, verified only, red list categories.
-- **Extra fields:** optional fields such as habitat and quantity. Free text remarks are off by default because they can contain personal data.
+- **Extra fields:** optional fields such as habitat and life stage. The standard fields include the quantity and its unit. Free text remarks are off by default because they can contain personal data.
 
 **Count observations** shows how many observations match, without downloading them. **Fetch and show observations** counts if needed, asks for confirmation above 2 000 observations, refuses above 100 000, downloads the observations in the background with a progress bar, and adds them as a temporary layer, coloured by year. Save the layer with QGIS' own tools (the memory layer indicator, or *Export > Save Features As*).
 
