@@ -88,8 +88,10 @@ class SpeciesDataDockWidget(QDockWidget):
         self.layer_kind = QComboBox()
         self.layer_kind.addItem(tr("Live layer (follows the map window)"), "live")
         self.layer_kind.addItem(tr("Snapshot (downloaded and saved as GeoPackage)"), "snapshot")
-        self.create_button = QPushButton(tr("Create layer"))
+        self.create_button = QPushButton()
         self.create_button.clicked.connect(self.on_create)
+        self.layer_kind.currentIndexChanged.connect(self._update_create_button)
+        self._update_create_button()
         layout.addWidget(self.count_button)
         layout.addWidget(self.count_label)
         layout.addWidget(self.layer_kind)
@@ -124,6 +126,12 @@ class SpeciesDataDockWidget(QDockWidget):
             for widget in root.findChildren(widget_type):
                 if widget is not self.layer_kind:
                     getattr(widget, signal).connect(self._clear_count)
+
+    def _update_create_button(self, *_):
+        if self.layer_kind.currentData() == "live":
+            self.create_button.setText(tr("Add live layer to the map"))
+        else:
+            self.create_button.setText(tr("Download snapshot and add to the map"))
 
     def _clear_count(self, *_):
         self._count = None

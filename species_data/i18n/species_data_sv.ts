@@ -40,10 +40,6 @@
       <translation>Ögonblicksbild (hämtas och sparas som GeoPackage)</translation>
     </message>
     <message>
-      <source>Create layer</source>
-      <translation>Skapa lager</translation>
-    </message>
-    <message>
       <source>Vascular plants only</source>
       <translation>Endast kärlväxter</translation>
     </message>
@@ -144,6 +140,14 @@
     <message>
       <source>Species Data</source>
       <translation>Artdata</translation>
+    </message>
+    <message>
+      <source>Add live layer to the map</source>
+      <translation>Lägg till levande lager i kartan</translation>
+    </message>
+    <message>
+      <source>Download snapshot and add to the map</source>
+      <translation>Hämta ögonblicksbild och lägg till i kartan</translation>
     </message>
     <message>
       <source>Species names (leave empty for all species)</source>
