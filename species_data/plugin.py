@@ -1,4 +1,4 @@
-"""Main plugin class for SLU Artdatabanken."""
+"""Main plugin class for Species Data (SLU Artdatabanken)."""
 from pathlib import Path
 
 from qgis.core import QgsApplication
@@ -6,13 +6,13 @@ from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator
 from qgis.PyQt.QtGui import QIcon
 
 from .compat import QAction
-from .dockwidget import SluArtdatabankenDockWidget
-from .provider import SluArtdatabankenProvider
+from .dockwidget import SpeciesDataDockWidget
+from .provider import SpeciesDataProvider
 
-PLUGIN_NAME = "SLU Artdatabanken"
+PLUGIN_NAME = "Species Data (SLU Artdatabanken)"
 
 
-class SluArtdatabankenPlugin:
+class SpeciesDataPlugin:
     """QGIS plugin implementation."""
 
     def __init__(self, iface):
@@ -26,7 +26,7 @@ class SluArtdatabankenPlugin:
 
     def _load_translation(self):
         locale = QSettings().value("locale/userLocale", "en")[:2]
-        path = self.plugin_dir / "i18n" / f"slu_artdatabanken_{locale}.qm"
+        path = self.plugin_dir / "i18n" / f"species_data_{locale}.qm"
         if path.exists():
             self.translator = QTranslator()
             self.translator.load(str(path))
@@ -34,7 +34,7 @@ class SluArtdatabankenPlugin:
 
     @staticmethod
     def tr(message):
-        return QCoreApplication.translate("SluArtdatabankenPlugin", message)
+        return QCoreApplication.translate("SpeciesDataPlugin", message)
 
     def initGui(self):  # noqa: N802 (name required by QGIS)
         icon = QIcon(str(self.plugin_dir / "icon.svg"))
@@ -43,7 +43,7 @@ class SluArtdatabankenPlugin:
         self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu("&" + PLUGIN_NAME, self.action)
 
-        self.provider = SluArtdatabankenProvider()
+        self.provider = SpeciesDataProvider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
     def unload(self):
@@ -64,6 +64,6 @@ class SluArtdatabankenPlugin:
 
     def run(self):
         if self.dock is None:
-            self.dock = SluArtdatabankenDockWidget(self.iface.mainWindow())
+            self.dock = SpeciesDataDockWidget(self.iface.mainWindow())
             self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
         self.dock.setVisible(not self.dock.isVisible())

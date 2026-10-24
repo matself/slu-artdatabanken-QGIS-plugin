@@ -3,7 +3,7 @@ import configparser
 import zipfile
 from pathlib import Path
 
-MODULE = "slu_artdatabanken"
+MODULE = "species_data"
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_DIR = ROOT / MODULE
 SKIP_DIRS = {"__pycache__", ".git"}

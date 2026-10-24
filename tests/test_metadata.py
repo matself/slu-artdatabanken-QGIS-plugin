@@ -2,7 +2,7 @@
 import configparser
 from pathlib import Path
 
-PLUGIN_DIR = Path(__file__).resolve().parent.parent / "slu_artdatabanken"
+PLUGIN_DIR = Path(__file__).resolve().parent.parent / "species_data"
 REQUIRED = [
     "name",
     "qgisMinimumVersion",

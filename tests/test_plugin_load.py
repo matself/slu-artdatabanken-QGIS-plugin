@@ -15,7 +15,7 @@ start_app()
 
 
 def test_class_factory_and_lifecycle():
-    from slu_artdatabanken import classFactory
+    from species_data import classFactory
 
     plugin = classFactory(get_iface())
     plugin.initGui()

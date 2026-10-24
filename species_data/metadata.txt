@@ -1,0 +1,21 @@
+[general]
+name=Species Data (SLU Artdatabanken)
+qgisMinimumVersion=3.44
+qgisMaximumVersion=4.99
+description=Search and map species observations from SLU Artdatabanken. Independent plugin, not owned or endorsed by SLU.
+version=0.1.0
+author=Mats Elfström
+email=mats.elfstrom@gmail.com
+about=Build dot maps of species observations from the SLU Artdatabanken Species Observation System without needing to know APIs or filter languages. This is an independent, community-developed plugin. It is not developed, owned or endorsed by SLU or SLU Artdatabanken. Data is retrieved from SLU Artdatabanken's Species Observation System under their API terms.
+tracker=https://github.com/matself/slu-artdatabanken-QGIS-plugin/issues
+repository=https://github.com/matself/slu-artdatabanken-QGIS-plugin
+homepage=https://github.com/matself/slu-artdatabanken-QGIS-plugin
+category=Plugins
+icon=icon.svg
+tags=
+experimental=True
+deprecated=False
+license=GPL-2.0-or-later
+hasProcessingProvider=yes
+changelog=
+    0.1.0 - Initial version

@@ -1,4 +1,4 @@
-"""Processing provider for SLU Artdatabanken."""
+"""Processing provider for Species Data (SLU Artdatabanken)."""
 from pathlib import Path
 
 from qgis.core import QgsProcessingProvider
@@ -7,12 +7,12 @@ from qgis.PyQt.QtGui import QIcon
 from .algorithms.example_algorithm import ExampleAlgorithm
 
 
-class SluArtdatabankenProvider(QgsProcessingProvider):
+class SpeciesDataProvider(QgsProcessingProvider):
     def id(self):
-        return "slu_artdatabanken"
+        return "species_data"
 
     def name(self):
-        return "SLU Artdatabanken"
+        return "Species Data (SLU Artdatabanken)"
 
     def longName(self):  # noqa: N802
         return self.name()
