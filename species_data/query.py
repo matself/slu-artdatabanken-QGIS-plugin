@@ -9,19 +9,28 @@ from datetime import date
 from typing import Optional
 from xml.sax.saxutils import escape
 
-# The WFS service returns at most this many features per request and reports it
-# as ``numberMatched`` even when more exist, so a count equal to the cap means
-# "at least this many".
-WFS_FEATURE_CAP = 5000
-# Warn the user well before the cap. A dot map of this many points is already
+# One WFS request returns at most this many features and reports it as
+# ``numberMatched`` even when more exist, so that number is never a total.
+WFS_REQUEST_CAP = 5000
+# Paging works up to this start index. A QGIS WFS layer pages automatically, so
+# it can load far more than one request's worth: count before creating it.
+WFS_PAGING_LIMIT = 100000
+# Warn the user well before the limit. A dot map of this many points is already
 # too much to be useful.
 WARN_THRESHOLD = 2000
 
 DEFAULT_ORGANISM_GROUP = "Kärlväxter"
 
-# Red list categories treated as "red-listed" in the REST filter. The WFS
-# ``isRedlisted`` flag may be defined differently: verify in phase 0.
-REDLIST_CATEGORIES = ("CR", "EN", "VU", "NT")
+# All red list categories, in the order the UI shows them. The WFS
+# ``isRedlisted`` flag is not used: it is also true for category NE.
+REDLIST_CATEGORIES = ("RE", "CR", "EN", "VU", "NT", "DD", "LC", "NA", "NE")
+# The default selection for "red-listed species".
+THREATENED_CATEGORIES = ("CR", "EN", "VU", "NT")
+
+PRESENT = "present"
+ABSENT = "absent"
+BOTH = "both"
+_OCCURRENCE_REST = {PRESENT: "Present", ABSENT: "Absent", BOTH: "BothPresentAndAbsent"}
 
 # Dates are stored as UTC instants of Swedish local time, so a date-only
 # observation on local day D has startDate ~ (D-1)T22:00Z/23:00Z and endDate
@@ -63,9 +72,10 @@ class Query:
     polygon_wgs84: Optional[dict] = None  # GeoJSON geometry in WGS84
     date_from: Optional[date] = None
     date_to: Optional[date] = None
-    present_only: bool = True
+    occurrence: str = PRESENT
     verified_only: bool = False
-    redlisted_only: bool = False
+    redlist_categories: tuple[str, ...] = ()
+    dataset_ids: tuple[int, ...] = ()
     exclude_uncertain_identification: bool = False
     max_uncertainty_m: Optional[int] = None
 
@@ -108,12 +118,16 @@ class Query:
         if self.date_to:
             terms.append(_cmp("PropertyIsLessThanOrEqualTo", "startDate",
                               f"{self.date_to.isoformat()}{_END_OF_DAY_START_BOUND}"))
-        if self.present_only:
+        if self.occurrence == PRESENT:
             terms.append(_eq("isPresentObservation", "true"))
+        elif self.occurrence == ABSENT:
+            terms.append(_eq("isPresentObservation", "false"))
+        if self.dataset_ids:
+            terms.append(_or([_eq("dataProviderId", int(i)) for i in self.dataset_ids]))
         if self.verified_only:
             terms.append(_eq("isVerified", "true"))
-        if self.redlisted_only:
-            terms.append(_eq("isRedlisted", "true"))
+        if self.redlist_categories:
+            terms.append(_or([_eq("redlistCategory", c) for c in self.redlist_categories]))
         if self.exclude_uncertain_identification:
             terms.append(_eq("isUncertainIdentification", "false"))
         if self.max_uncertainty_m is not None:
@@ -149,8 +163,8 @@ class Query:
         if self.taxon_ids:
             taxon["ids"] = [int(i) for i in self.taxon_ids]
             taxon["includeUnderlyingTaxa"] = True
-        if self.redlisted_only:
-            taxon["redListCategories"] = list(REDLIST_CATEGORIES)
+        if self.redlist_categories:
+            taxon["redListCategories"] = list(self.redlist_categories)
         if taxon:
             body["taxon"] = taxon
 
@@ -176,8 +190,9 @@ class Query:
         if geographics:
             body["geographics"] = geographics
 
-        if self.present_only:
-            body["occurrenceStatus"] = "Present"
+        body["occurrenceStatus"] = _OCCURRENCE_REST[self.occurrence]
+        if self.dataset_ids:
+            body["dataProvider"] = {"ids": [int(i) for i in self.dataset_ids]}
         body["verificationStatus"] = (
             "Verified" if self.verified_only else "BothVerifiedAndNotVerified"
         )
@@ -258,9 +273,9 @@ class CountAssessment:
 
 
 def assess_count(
-    count: int, warn_at: int = WARN_THRESHOLD, cap: int = WFS_FEATURE_CAP
+    count: int, warn_at: int = WARN_THRESHOLD, cap: int = WFS_PAGING_LIMIT
 ) -> CountAssessment:
-    """Classify a WFS match count. Never treat a capped count as the real total."""
+    """Classify a match count. A count at the paging limit is only a lower bound."""
     if count >= cap:
         return CountAssessment(CAPPED, count, at_least=True)
     if count >= warn_at:

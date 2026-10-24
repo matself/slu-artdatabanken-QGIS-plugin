@@ -5,6 +5,8 @@ from datetime import date
 import pytest
 
 from species_data.query import (
+    ABSENT,
+    BOTH,
     CAPPED,
     OK,
     WARN,
@@ -42,23 +44,23 @@ def test_default_is_vascular_plants_present_only():
 
 
 def test_empty_query_has_no_filter():
-    assert Query(organism_group=None, present_only=False).to_ogc_filter() == ""
+    assert Query(organism_group=None, occurrence=BOTH).to_ogc_filter() == ""
 
 
 def test_single_term_is_not_wrapped_in_and():
-    root = parse(Query(organism_group=None, present_only=False, county="Skåne"))
+    root = parse(Query(organism_group=None, occurrence=BOTH, county="Skåne"))
     assert root.find(OGC + "And") is None
     assert conditions(root) == [("PropertyIsEqualTo", "county", "Skåne")]
 
 
 def test_special_characters_are_escaped():
-    q = Query(organism_group=None, present_only=False, county="A<&>B")
+    q = Query(organism_group=None, occurrence=BOTH, county="A<&>B")
     assert "A&lt;&amp;&gt;B" in q.to_ogc_filter()
     assert conditions(parse(q))[0][2] == "A<&>B"
 
 
 def test_several_names_match_both_name_fields_case_insensitively():
-    q = Query(organism_group=None, present_only=False, names=("Primula veris", "vitsippa"))
+    q = Query(organism_group=None, occurrence=BOTH, names=("Primula veris", "vitsippa"))
     root = parse(q)
     likes = list(root.iter(OGC + "PropertyIsLike"))
     assert [(e.find(OGC + "PropertyName").text, e.find(OGC + "Literal").text) for e in likes] == [
@@ -72,13 +74,13 @@ def test_several_names_match_both_name_fields_case_insensitively():
 
 
 def test_wildcards_in_names_are_escaped():
-    q = Query(organism_group=None, present_only=False, names=("a*b?",))
+    q = Query(organism_group=None, occurrence=BOTH, names=("a*b?",))
     literal = [c for c in conditions(parse(q)) if c[1] == "scientificName"][0][2]
     assert literal == r"a\*b\?"
 
 
 def test_taxon_ids_become_or_of_equals():
-    q = Query(organism_group=None, present_only=False, taxon_ids=(100, 200))
+    q = Query(organism_group=None, occurrence=BOTH, taxon_ids=(100, 200))
     assert conditions(parse(q)) == [
         ("PropertyIsEqualTo", "dyntaxaTaxonId", "100"),
         ("PropertyIsEqualTo", "dyntaxaTaxonId", "200"),
@@ -100,7 +102,7 @@ def test_polygon_with_hole():
     hole = [[0.2, 0.2], [0.4, 0.2], [0.4, 0.4], [0.2, 0.2]]
     q = Query(
         organism_group=None,
-        present_only=False,
+        occurrence=BOTH,
         polygon_wgs84={"type": "Polygon", "coordinates": [ring, hole]},
     )
     root = parse(q)
@@ -118,7 +120,7 @@ def test_multipolygon_is_rejected():
 def test_date_range_keeps_whole_local_days():
     q = Query(
         organism_group=None,
-        present_only=False,
+        occurrence=BOTH,
         date_from=date(2020, 1, 1),
         date_to=date(2020, 12, 31),
     )
@@ -131,15 +133,16 @@ def test_date_range_keeps_whole_local_days():
 def test_flags_and_uncertainty():
     q = Query(
         organism_group=None,
-        present_only=False,
+        occurrence=BOTH,
         verified_only=True,
-        redlisted_only=True,
+        redlist_categories=("CR", "NE"),
         exclude_uncertain_identification=True,
         max_uncertainty_m=50,
     )
     assert conditions(parse(q)) == [
         ("PropertyIsEqualTo", "isVerified", "true"),
-        ("PropertyIsEqualTo", "isRedlisted", "true"),
+        ("PropertyIsEqualTo", "redlistCategory", "CR"),
+        ("PropertyIsEqualTo", "redlistCategory", "NE"),
         ("PropertyIsEqualTo", "isUncertainIdentification", "false"),
         ("PropertyIsLessThanOrEqualTo", "coordinateUncertaintyInMeters", "50"),
     ]
@@ -169,13 +172,14 @@ def test_rest_filter_full():
         verified_only=True,
         exclude_uncertain_identification=True,
         max_uncertainty_m=100,
-        redlisted_only=True,
+        dataset_ids=(1, 19),
+        redlist_categories=("CR", "NE"),
     )
     assert q.to_sos_filter() == {
         "taxon": {
             "ids": [100],
             "includeUnderlyingTaxa": True,
-            "redListCategories": ["CR", "EN", "VU", "NT"],
+            "redListCategories": ["CR", "NE"],
         },
         "date": {
             "dateFilterType": "OverlappingStartDateAndEndDate",
@@ -189,6 +193,7 @@ def test_rest_filter_full():
             "maxAccuracy": 100,
         },
         "occurrenceStatus": "Present",
+        "dataProvider": {"ids": [1, 19]},
         "verificationStatus": "Verified",
         "determinationFilter": "NotUnsureDetermination",
     }
@@ -201,10 +206,29 @@ def test_rest_filter_full():
         (1999, OK, False),
         (2000, WARN, False),
         (4999, WARN, False),
-        (5000, CAPPED, True),
-        (12000, CAPPED, True),
+        (5000, WARN, False),
+        (99999, WARN, False),
+        (100000, CAPPED, True),
+        (250000, CAPPED, True),
     ],
 )
 def test_assess_count(count, status, at_least):
     result = assess_count(count)
     assert (result.status, result.at_least) == (status, at_least)
+
+
+def test_absent_and_both_occurrence():
+    absent = conditions(parse(Query(organism_group=None, occurrence=ABSENT)))
+    assert absent == [("PropertyIsEqualTo", "isPresentObservation", "false")]
+    assert Query(organism_group=None, occurrence=BOTH).to_ogc_filter() == ""
+    assert Query(organism_group=None, occurrence=BOTH, taxon_ids=(1,)).to_sos_filter()[
+        "occurrenceStatus"
+    ] == "BothPresentAndAbsent"
+
+
+def test_datasets_become_or_of_provider_ids():
+    q = Query(organism_group=None, occurrence=BOTH, dataset_ids=(1, 19))
+    assert conditions(parse(q)) == [
+        ("PropertyIsEqualTo", "dataProviderId", "1"),
+        ("PropertyIsEqualTo", "dataProviderId", "19"),
+    ]

@@ -9,8 +9,6 @@ from .compat import QAction
 from .dockwidget import SpeciesDataDockWidget
 from .provider import SpeciesDataProvider
 
-PLUGIN_NAME = "Species Data (SLU Artdatabanken)"
-
 
 class SpeciesDataPlugin:
     """QGIS plugin implementation."""
@@ -19,6 +17,7 @@ class SpeciesDataPlugin:
         self.iface = iface
         self.plugin_dir = Path(__file__).parent
         self.action = None
+        self.menu_name = None
         self.dock = None
         self.provider = None
         self.translator = None
@@ -38,16 +37,17 @@ class SpeciesDataPlugin:
 
     def initGui(self):  # noqa: N802 (name required by QGIS)
         icon = QIcon(str(self.plugin_dir / "icon.svg"))
-        self.action = QAction(icon, self.tr(PLUGIN_NAME), self.iface.mainWindow())
+        self.menu_name = self.tr("Species Data (SLU Artdatabanken)")
+        self.action = QAction(icon, self.menu_name, self.iface.mainWindow())
         self.action.triggered.connect(self.run)
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu("&" + PLUGIN_NAME, self.action)
+        self.iface.addPluginToMenu("&" + self.menu_name, self.action)
 
         self.provider = SpeciesDataProvider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
     def unload(self):
-        self.iface.removePluginMenu("&" + PLUGIN_NAME, self.action)
+        self.iface.removePluginMenu("&" + self.menu_name, self.action)
         self.iface.removeToolBarIcon(self.action)
         self.action.deleteLater()
         self.action = None
@@ -64,6 +64,6 @@ class SpeciesDataPlugin:
 
     def run(self):
         if self.dock is None:
-            self.dock = SpeciesDataDockWidget(self.iface.mainWindow())
+            self.dock = SpeciesDataDockWidget(self.iface, self.iface.mainWindow())
             self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
         self.dock.setVisible(not self.dock.isVisible())

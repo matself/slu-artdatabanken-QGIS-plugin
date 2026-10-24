@@ -1,5 +1,7 @@
 """Build dist/<module>-<version>.zip, ready for 'Install from ZIP' or plugins.qgis.org."""
 import configparser
+import subprocess
+import sys
 import zipfile
 from pathlib import Path
 
@@ -17,6 +19,8 @@ def read_version():
 
 
 def main():
+    script = ROOT / "scripts" / "translations.py"
+    subprocess.run([sys.executable, str(script), "compile"], check=True)
     out_dir = ROOT / "dist"
     out_dir.mkdir(exist_ok=True)
     target = out_dir / f"{MODULE}-{read_version()}.zip"

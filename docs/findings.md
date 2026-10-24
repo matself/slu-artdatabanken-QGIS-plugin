@@ -43,16 +43,22 @@ Tested in QGIS 3.44.2 with `version=1.0.0`, `pagingEnabled=true`, `pageSize=1000
 - CQL `BBOX(...)` and `INTERSECTS(...)` fail in the service's CQL parser.
 - An OGC XML filter (`filter=` parameter) combines everything and works: equality, case-insensitive `PropertyIsLike`, `Or`, booleans, dates, `ogc:BBOX` and `ogc:Intersects`. The geometry attribute is `point` (the other is `pointLocation`).
 - Spatial coordinates in the filter work in `EPSG:4326` with longitude,latitude order (`gml:Box` and `gml:Polygon`), while `srsName=EPSG:3006` still returns SWEREF 99 TM geometries.
-- `Query.to_ogc_filter()` replaces the CQL serialiser. For QGIS, the QGIS `filter` URI parameter takes an OGC filter, so the same string can be given there (not yet tested in the provider).
+- `Query.to_ogc_filter()` replaces the CQL serialiser. For QGIS, the QGIS `filter` URI parameter takes an OGC filter, so the same string can be given there (tested in QGIS 3.44.2: the layer URI `filter='<ogc:Filter ...>'` with bbox, names, dates and flags returned exactly the matching 32 and 346 features).
 
 ### Name search on WFS (no key needed)
 - `scientificName` and `vernacularName` can be matched exactly and case-insensitively, several at once, with `PropertyIsLike matchCase="false"`. The Swedish names are stored in lower case (`gullviva`).
 - Some records are only identified to group level (for example scientific name `Tracheophyta`, Swedish name `kärlväxter`). They have the right organism group and appear in area searches but not in name searches. The UI may want an option to hide them.
 - A name picker (autocomplete, synonyms, underlying taxa) still needs Dyntaxa and therefore a key. Without one, exact names are the only option.
 
+### Other QGIS provider facts
+- The provider lower-cases field names (`recordedby`) and adds a `*_nil` field for each of the 119 fields. Feature access by the original camel case name still works.
+- WFS `isRedlisted` is also true for category NE, so the plugin filters on `redlistCategory` codes instead.
+- `dataProviderId` 1 is Artportalen, 19 is iNaturalist. The full list needs REST `/DataProviders` (key).
+- Counting by probing took 5 seconds for a 346 feature result and matched the layer's loaded feature count exactly.
+
 ## 9. `url` and `recordedBy` always filled?
 Open.
 
 ## Other
-- The WFS name of the geometry attribute is still unknown (needed for any CQL `BBOX(...)`).
+- Fynddata (`fynddata.artdatabanken.se`, SLU Artdatabanken's own search web app, used as a UI reference) requires login, so its search pages cannot be read without the user signing in.
 - Date fields are UTC instants of Swedish local time. Date-only observations span from the previous day 22:00Z or 23:00Z to the day itself 21:59:59Z or 22:59:59Z. Range filters in `species_data/query.py` are built around this and should be checked against Artportalen's web counts.
