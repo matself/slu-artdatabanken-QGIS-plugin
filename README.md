@@ -4,7 +4,7 @@ A QGIS plugin for building dot maps of vascular plant observations from the Artp
 
 > **Independent plugin.** This plugin is community-developed. It is not developed, owned or endorsed by SLU or SLU Artdatabanken. Data is retrieved from SLU Artdatabanken's Species Observation System under their API terms. Observation data is provided by SLU Artdatabanken; see their [API terms](https://www.slu.se/artdatabanken/rapportering-och-fynd/oppna-data-och-apier/api-villkor/).
 
-Compatible with QGIS 3.44 up to 4.99 (Qt5 and Qt6). The user interface is in English and Swedish.
+Compatible with QGIS 3.44 up to 4.99 (Qt5 and Qt6). The user interface is in English and Swedish. A user guide in Swedish is in [docs/anvandarhandledning.md](docs/anvandarhandledning.md) (this README is the English description).
 
 ## What it does
 

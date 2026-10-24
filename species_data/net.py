@@ -10,12 +10,23 @@ from .counting import CancelledError, Probe
 from .query import BOTH, Query
 from .wfs import WFS_URL, request_params
 
-# The value of ``taxonCategory`` for genus level taxa (Swedish: Släkte).
+# The value of ``taxonCategory`` for genus level taxa, spelled as the service does.
 GENUS_CATEGORY = "Släkte"
+
+
+# Identifies the client to the service, as SLU Artdatabanken asks API users to do.
+REQUESTING_SYSTEM = b"QGIS plugin Species Data (SLU Artdatabanken) 0.1.0"
 
 
 class NetworkError(RuntimeError):
     pass
+
+
+def new_request(url: str) -> QNetworkRequest:
+    """A GET request for ``url`` that identifies this plugin."""
+    request = QNetworkRequest(QUrl.fromEncoded(url.encode("ascii")))
+    request.setRawHeader(b"X-Requesting-System", REQUESTING_SYSTEM)
+    return request
 
 
 def feature_probe(query: Query, is_cancelled=lambda: False, feedback: QgsFeedback = None) -> Probe:
@@ -29,7 +40,7 @@ def feature_probe(query: Query, is_cancelled=lambda: False, feedback: QgsFeedbac
         if is_cancelled():
             raise CancelledError()
         url = f"{WFS_URL}?{urlencode(request_params(query, start_index=index))}"
-        request = QNetworkRequest(QUrl.fromEncoded(url.encode("ascii")))
+        request = new_request(url)
         blocking = QgsBlockingNetworkRequest()
         error = blocking.get(request, False, feedback)
         if error != QgsBlockingNetworkRequest.ErrorCode.NoError:
@@ -57,7 +68,7 @@ def genus_for_swedish_name(name: str, organism_group, is_cancelled=lambda: False
     names = ("scientificName", "vernacularName", "taxonCategory")
     params = request_params(probe, max_features=20, fields=names)
     url = f"{WFS_URL}?{urlencode(params)}"
-    request = QNetworkRequest(QUrl.fromEncoded(url.encode("ascii")))
+    request = new_request(url)
     blocking = QgsBlockingNetworkRequest()
     if is_cancelled():
         raise CancelledError()

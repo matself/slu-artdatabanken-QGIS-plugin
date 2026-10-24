@@ -3,11 +3,9 @@ from dataclasses import replace
 from urllib.parse import urlencode
 
 from qgis.core import QgsBlockingNetworkRequest, QgsFeedback, QgsTask
-from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from . import counting, snapshot
-from .net import NetworkError, feature_probe, genus_for_swedish_name
+from .net import NetworkError, feature_probe, genus_for_swedish_name, new_request
 from .query import BOTH, Query
 from .wfs import WFS_URL, request_params
 
@@ -55,7 +53,7 @@ class SnapshotTask(QgsTask):
         names = tuple(name for name, _ in self.fields)
         params = request_params(self.query, start_index=start, max_features=size, fields=names)
         url = f"{WFS_URL}?{urlencode(params)}"
-        request = QNetworkRequest(QUrl.fromEncoded(url.encode("ascii")))
+        request = new_request(url)
         blocking = QgsBlockingNetworkRequest()
         error = blocking.get(request, False, self._feedback)
         if error != QgsBlockingNetworkRequest.ErrorCode.NoError:
