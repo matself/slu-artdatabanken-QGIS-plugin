@@ -44,6 +44,10 @@
       <translation>Hämta och visa fynd</translation>
     </message>
     <message>
+      <source>Enter at least one species or genus name.</source>
+      <translation>Ange minst ett arts- eller släktnamn.</translation>
+    </message>
+    <message>
       <source>Counting observations...</source>
       <translation>Räknar fynd...</translation>
     </message>
@@ -178,8 +182,8 @@
       <translation>Extrafält</translation>
     </message>
     <message>
-      <source>Species names (leave empty for all species)</source>
-      <translation>Artnamn (lämna tomt för alla arter)</translation>
+      <source>Species or genus names (required)</source>
+      <translation>Arts- eller släktnamn (obligatoriskt)</translation>
     </message>
     <message>
       <source>The standard fields are always included.</source>

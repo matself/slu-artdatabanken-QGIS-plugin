@@ -160,20 +160,31 @@ class SpeciesDataDockWidget(QDockWidget):
             for widget in root.findChildren(widget_type):
                 getattr(widget, signal).connect(self._clear_count)
 
+    def _has_names(self):
+        return bool(self.names.toPlainText().strip())
+
+    def _refresh_buttons(self):
+        """Counting and fetching need at least one name, and nothing else running."""
+        idle = not (self._count_task or self._downloading or self._execute_pending)
+        enabled = idle and self._has_names()
+        self.count_button.setEnabled(enabled)
+        self.create_button.setEnabled(enabled)
+
     def _clear_count(self, *_):
         """The inputs changed: the old count no longer describes the search."""
         self._execute_pending = False
         self._stop_count()
         self._count = None
         self._unknown = ()
-        self.count_label.setText("")
+        hint = "" if self._has_names() else tr("Enter at least one species or genus name.")
+        self.count_label.setText(hint)
 
     def _stop_count(self):
         if self._count_task is not None:
             self._count_task.cancel()
             self._count_task = None
         self.progress.setVisible(False)
-        self.count_button.setEnabled(True)
+        self._refresh_buttons()
 
     def _map_moved(self):
         # The search is for the map window at the time of the click: let it finish.
@@ -181,8 +192,9 @@ class SpeciesDataDockWidget(QDockWidget):
             self._clear_count()
 
     def _start_count(self):
+        if not self._has_names():
+            return
         query = self.build_query()
-        self.count_button.setEnabled(False)
         self.count_label.setText(tr("Counting observations..."))
         self.progress.setRange(0, 0)  # busy: the number of requests is not known in advance
         self.progress.setVisible(True)
@@ -192,7 +204,7 @@ class SpeciesDataDockWidget(QDockWidget):
                 return  # superseded by a newer search
             self._count_task = None
             self.progress.setVisible(False)
-            self.count_button.setEnabled(True)
+            self._refresh_buttons()
             self._aliases.update(aliases)
             self._count = (self.build_query(), result)  # the query now uses the aliases
             self._unknown = unknown
@@ -206,12 +218,12 @@ class SpeciesDataDockWidget(QDockWidget):
                 self._count_task = None
                 self._execute_pending = False
                 self.progress.setVisible(False)
-                self.count_button.setEnabled(True)
-                self.create_button.setEnabled(True)
+                self._refresh_buttons()
                 self.count_label.setText(message)
 
         task = CountTask(query, done, failed)
         self._count_task = task
+        self._refresh_buttons()
         QgsApplication.taskManager().addTask(task)
 
     # -- tabs --------------------------------------------------------------
@@ -230,7 +242,7 @@ class SpeciesDataDockWidget(QDockWidget):
         hint = QLabel(tr("A genus name (for example Anemone) includes all its species."))
         hint.setWordWrap(True)
         form.addWidget(hint)
-        form.addWidget(QLabel(tr("Species names (leave empty for all species)")))
+        form.addWidget(QLabel(tr("Species or genus names (required)")))
         form.addWidget(self.names)
         return tab
 
@@ -405,6 +417,8 @@ class SpeciesDataDockWidget(QDockWidget):
 
     def on_create(self):
         """Fetch and show: count first (if needed), then download and add the layer."""
+        if not self._has_names():
+            return
         query = self.build_query()
         self.create_button.setEnabled(False)
         if self._count is not None and self._count[0] == query:
@@ -417,13 +431,13 @@ class SpeciesDataDockWidget(QDockWidget):
     def _proceed(self, query, result):
         assessment = self._show_count(result)
         if result.value == 0:
-            self.create_button.setEnabled(True)
+            self._refresh_buttons()
             QMessageBox.information(
                 self, tr("Species Data"), tr("No observations match the search.")
             )
             return
         if assessment.at_least:
-            self.create_button.setEnabled(True)
+            self._refresh_buttons()
             QMessageBox.warning(
                 self,
                 tr("Species Data"),
@@ -437,7 +451,7 @@ class SpeciesDataDockWidget(QDockWidget):
                 tr("About {n} observations will be fetched. Continue?").format(n=result.value),
             )
             if answer != QMessageBox.StandardButton.Yes:
-                self.create_button.setEnabled(True)
+                self._refresh_buttons()
                 return
         self._download(query, result)
 
@@ -453,7 +467,7 @@ class SpeciesDataDockWidget(QDockWidget):
 
         def finish():
             self._downloading = False
-            self.create_button.setEnabled(True)
+            self._refresh_buttons()
             self.progress.setVisible(False)
 
         def done(rows):
