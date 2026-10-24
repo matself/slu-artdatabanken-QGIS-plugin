@@ -31,6 +31,20 @@ _TYPES = {
 }
 _STOCKHOLM = QTimeZone(b"Europe/Stockholm")
 
+# Shown when the pointer rests on a point (QGIS map tips) and in the identify results.
+DISPLAY_EXPRESSION = (
+    "coalesce(\"vernacularName\", \"scientificName\") || ' ' || "
+    "coalesce(format_date(\"endDate\", 'yyyy-MM-dd'), '')"
+)
+MAP_TIP = (
+    "<b>[% coalesce(\"vernacularName\", '') %]</b> "
+    "<i>[% coalesce(\"scientificName\", '') %]</i><br>"
+    "[% coalesce(format_date(\"endDate\", 'yyyy-MM-dd'), '') %]<br>"
+    "[% coalesce(\"locality\", '') %]"
+    "[% if(\"organismQuantity\" is not null, "
+    "'<br>' || \"organismQuantity\" || ' ' || coalesce(\"organismQuantityUnit\", ''), '') %]"
+)
+
 
 def create_layer(
     rows, fields: tuple, query: Query, name: str, count: Count, retrieved: datetime = None
@@ -44,6 +58,8 @@ def create_layer(
     layer = _memory_layer(rows, fields)
     layer.setName(name)
     layer.setRenderer(_year_renderer(layer))
+    layer.setDisplayExpression(DISPLAY_EXPRESSION)
+    layer.setMapTipTemplate(MAP_TIP)
     layer.setMetadata(_metadata(query, name, count, retrieved))
     return layer
 

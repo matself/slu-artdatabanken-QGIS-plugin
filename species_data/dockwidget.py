@@ -483,6 +483,8 @@ class SpeciesDataDockWidget(QDockWidget):
                 QMessageBox.warning(self, tr("Species Data"), tr("The layer could not be created."))
                 return
             QgsProject.instance().addMapLayer(layer)
+            self.iface.setActiveLayer(layer)  # map tips show for the active layer
+            self.iface.actionMapTips().setChecked(True)
             self.count_label.setText(tr("Showing {n} observations.").format(n=len(rows)))
             self.iface.messageBar().pushMessage(
                 tr("Species Data"), provenance.citation(datetime.now()), duration=8
