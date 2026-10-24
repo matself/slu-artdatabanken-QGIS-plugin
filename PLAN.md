@@ -1,6 +1,6 @@
 # QGIS-plugin för artobservationer (SLU Artdatabanken): projektplan
 
-Status: planeringsfas, ingen kod skriven. Datum: 2026-10-24. Ägare: Mats (GitHub: matself).
+Ursprunglig status: planeringsfas, ingen kod skriven (se Status milstolpe 1 nedan). Datum: 2026-10-24. Ägare: Mats (GitHub: matself).
 Detta dokument är tänkt som startpunkt för arbete i Claude Code. Läs avsnitt 2 och 3 innan något byggs: de skiljer det som är verifierat från det som bara antagits.
 
 ## Status 2026-10-24 (milstolpe 1)
