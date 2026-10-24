@@ -5,8 +5,8 @@ from qgis.core import QgsBlockingNetworkRequest, QgsFeedback, QgsTask
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 
-from . import snapshot
-from .net import NetworkError
+from . import counting, snapshot
+from .net import NetworkError, feature_probe
 from .query import Query
 from .wfs import WFS_URL, request_params
 
@@ -36,7 +36,7 @@ class SnapshotTask(QgsTask):
                 is_cancelled=self.isCanceled,
                 on_progress=lambda done, total: self.setProgress(100 * done / total),
             )
-        except snapshot.CancelledError:
+        except counting.CancelledError:
             return False
         except Exception as exc:  # reported to the user in finished()
             self._error = str(exc)
@@ -59,7 +59,7 @@ class SnapshotTask(QgsTask):
         error = blocking.get(request, False, self._feedback)
         if error != QgsBlockingNetworkRequest.ErrorCode.NoError:
             if self.isCanceled():
-                raise snapshot.CancelledError()
+                raise counting.CancelledError()
             raise NetworkError(blocking.errorMessage())
         try:
             return snapshot.parse_page(bytes(blocking.reply().content()).decode("utf-8"))
@@ -67,4 +67,38 @@ class SnapshotTask(QgsTask):
             raise NetworkError("The service did not return GeoJSON") from exc
 
 
-__all__ = ["SnapshotTask"]
+class CountTask(QgsTask):
+    """Count the matches in the background. Cancelling stops the request series."""
+
+    def __init__(self, query: Query, on_done, on_error):
+        super().__init__("Species Data: counting observations", QgsTask.Flag.CanCancel)
+        self.query = query
+        self._on_done = on_done
+        self._on_error = on_error
+        self._feedback = QgsFeedback()
+        self._result = None
+        self._error = None
+
+    def cancel(self):
+        self._feedback.cancel()
+        super().cancel()
+
+    def run(self):
+        try:
+            probe = feature_probe(self.query, self.isCanceled, self._feedback)
+            self._result = counting.count(probe)
+        except counting.CancelledError:
+            return False
+        except Exception as exc:  # reported to the user in finished()
+            self._error = str(exc)
+            return False
+        return True
+
+    def finished(self, ok):
+        if ok:
+            self._on_done(self._result)
+        elif self._error:
+            self._on_error(self._error)
+
+
+__all__ = ["CountTask", "SnapshotTask"]

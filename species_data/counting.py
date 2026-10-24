@@ -9,6 +9,11 @@ from typing import Callable
 
 from .query import WFS_PAGING_LIMIT
 
+
+class CancelledError(Exception):
+    """The user cancelled or changed the search while a request series was running."""
+
+
 # ``exists(index)`` is True when a request with startIndex=index returns a feature.
 Probe = Callable[[int], bool]
 

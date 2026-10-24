@@ -8,36 +8,16 @@
       <translation>Artdata (SLU Artdatabanken)</translation>
     </message>
     <message>
-      <source>Taxa</source>
-      <translation>Taxa</translation>
-    </message>
-    <message>
-      <source>Time</source>
-      <translation>Tid</translation>
-    </message>
-    <message>
-      <source>Geography</source>
-      <translation>Geografi</translation>
-    </message>
-    <message>
-      <source>Properties</source>
-      <translation>Fyndegenskaper</translation>
-    </message>
-    <message>
-      <source>Datasets</source>
-      <translation>Dataset</translation>
-    </message>
-    <message>
-      <source>Count observations</source>
-      <translation>Räkna fynd</translation>
-    </message>
-    <message>
       <source>Live layer (follows the map window)</source>
       <translation>Levande lager (följer kartfönstret)</translation>
     </message>
     <message>
       <source>Snapshot (downloaded and saved as GeoPackage)</source>
       <translation>Ögonblicksbild (hämtas och sparas som GeoPackage)</translation>
+    </message>
+    <message>
+      <source>Counting observations...</source>
+      <translation>Räknar fynd...</translation>
     </message>
     <message>
       <source>Vascular plants only</source>
@@ -138,8 +118,32 @@
       <translation>CR, EN, VU, NT</translation>
     </message>
     <message>
+      <source>Downloading observations...</source>
+      <translation>Hämtar fynd...</translation>
+    </message>
+    <message>
       <source>Species Data</source>
       <translation>Artdata</translation>
+    </message>
+    <message>
+      <source>Taxa</source>
+      <translation>Taxa</translation>
+    </message>
+    <message>
+      <source>Time</source>
+      <translation>Tid</translation>
+    </message>
+    <message>
+      <source>Geography</source>
+      <translation>Geografi</translation>
+    </message>
+    <message>
+      <source>Properties</source>
+      <translation>Fyndegenskaper</translation>
+    </message>
+    <message>
+      <source>Datasets</source>
+      <translation>Dataset</translation>
     </message>
     <message>
       <source>Add live layer to the map</source>

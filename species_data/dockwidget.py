@@ -14,7 +14,7 @@ from qgis.core import (
     QgsProject,
 )
 from qgis.gui import QgsCollapsibleGroupBox
-from qgis.PyQt.QtCore import QCoreApplication, QDate, Qt
+from qgis.PyQt.QtCore import QCoreApplication, QDate, Qt, QTimer
 from qgis.PyQt.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -28,6 +28,7 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QMessageBox,
     QPlainTextEdit,
+    QProgressBar,
     QPushButton,
     QRadioButton,
     QScrollArea,
@@ -37,7 +38,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from . import counting, layers, provenance
-from .download import SnapshotTask
+from .download import CountTask, SnapshotTask
 from .net import NetworkError, feature_probe
 from .query import (
     ABSENT,
@@ -74,6 +75,12 @@ class SpeciesDataDockWidget(QDockWidget):
         self.iface = iface
         self.setObjectName("SpeciesDataDockWidget")
         self._count = None  # (Query, Count) of the last count
+        self._count_task = None
+        # Count a moment after the last change, so typing does not send a request per key.
+        self._count_timer = QTimer(self)
+        self._count_timer.setSingleShot(True)
+        self._count_timer.setInterval(800)
+        self._count_timer.timeout.connect(self._start_count)
 
         content = QWidget(self)
         layout = QVBoxLayout(content)
@@ -96,10 +103,10 @@ class SpeciesDataDockWidget(QDockWidget):
         scroll.setWidget(sections)
         layout.addWidget(scroll, 1)
 
-        self.count_button = QPushButton(tr("Count observations"))
-        self.count_button.clicked.connect(self.on_count)
         self.count_label = QLabel("")
         self.count_label.setWordWrap(True)
+        self.progress = QProgressBar()
+        self.progress.setVisible(False)
         self.layer_kind = QComboBox()
         self.layer_kind.addItem(tr("Live layer (follows the map window)"), "live")
         self.layer_kind.addItem(tr("Snapshot (downloaded and saved as GeoPackage)"), "snapshot")
@@ -107,8 +114,8 @@ class SpeciesDataDockWidget(QDockWidget):
         self.create_button.clicked.connect(self.on_create)
         self.layer_kind.currentIndexChanged.connect(self._update_create_button)
         self._update_create_button()
-        layout.addWidget(self.count_button)
         layout.addWidget(self.count_label)
+        layout.addWidget(self.progress)
         layout.addWidget(self.layer_kind)
         layout.addWidget(self.create_button)
 
@@ -126,6 +133,7 @@ class SpeciesDataDockWidget(QDockWidget):
         self.setWidget(content)
         self._watch_inputs(content)
         iface.mapCanvas().extentsChanged.connect(self._map_moved)
+        self._clear_count()
 
     def _watch_inputs(self, root):
         """Clear the count text when an input changes: it no longer describes the search."""
@@ -149,12 +157,44 @@ class SpeciesDataDockWidget(QDockWidget):
             self.create_button.setText(tr("Download snapshot and add to the map"))
 
     def _clear_count(self, *_):
+        """The inputs changed: forget the old count and schedule a new one."""
+        self._stop_count()
         self._count = None
-        self.count_label.setText("")
+        self.count_label.setText(tr("Counting observations..."))
+        self._count_timer.start()
+
+    def _stop_count(self):
+        if self._count_task is not None:
+            self._count_task.cancel()
+            self._count_task = None
+        self.progress.setVisible(False)
 
     def _map_moved(self):
-        if self.area_canvas.isChecked() and self.layer_kind.currentData() == "snapshot":
+        if self.area_canvas.isChecked():
             self._clear_count()
+
+    def _start_count(self):
+        query = self.build_query()
+        self.progress.setRange(0, 0)  # busy: the number of requests is not known in advance
+        self.progress.setVisible(True)
+
+        def done(result):
+            if task is not self._count_task:
+                return  # superseded by a newer search
+            self._count_task = None
+            self.progress.setVisible(False)
+            self._count = (query, result)
+            self._show_count(result)
+
+        def failed(message):
+            if task is self._count_task:
+                self._count_task = None
+                self.progress.setVisible(False)
+                self.count_label.setText(message)
+
+        task = CountTask(query, done, failed)
+        self._count_task = task
+        QgsApplication.taskManager().addTask(task)
 
     # -- tabs --------------------------------------------------------------
 
@@ -343,16 +383,11 @@ class SpeciesDataDockWidget(QDockWidget):
         self.count_label.setText(text)
         return assessment
 
-    def on_count(self):
-        query = self.build_query()
-        result = self._run_count(query)
-        if result is not None:
-            self._count = (query, result)
-            self._show_count(result)
-
     def on_create(self):
         query = self.build_query()
         if self._count is None or self._count[0] != query:
+            self._count_timer.stop()
+            self._stop_count()
             result = self._run_count(query)
             if result is None:
                 return
@@ -393,10 +428,19 @@ class SpeciesDataDockWidget(QDockWidget):
 
     def _create_snapshot(self, query, result):
         self.create_button.setEnabled(False)
+        self.progress.setRange(0, 100)
+        self.progress.setValue(0)
+        self.progress.setVisible(True)
+        self.count_label.setText(tr("Downloading observations..."))
         name = self._layer_name(query, result)
 
-        def done(rows):
+        def finish():
             self.create_button.setEnabled(True)
+            self.progress.setVisible(False)
+            self._show_count(result)
+
+        def done(rows):
+            finish()
             layer = layers.create_snapshot_layer(rows, query, name, result)
             if layer is None:
                 QMessageBox.warning(self, tr("Species Data"), tr("The layer could not be saved."))
@@ -405,11 +449,12 @@ class SpeciesDataDockWidget(QDockWidget):
             self._announce()
 
         def failed(message):
-            self.create_button.setEnabled(True)
+            finish()
             QMessageBox.warning(self, tr("Species Data"), message)
 
         self._task = SnapshotTask(query, result.value, done, failed)
-        self._task.taskTerminated.connect(lambda: self.create_button.setEnabled(True))
+        self._task.progressChanged.connect(lambda value: self.progress.setValue(int(value)))
+        self._task.taskTerminated.connect(finish)
         QgsApplication.taskManager().addTask(self._task)
 
     def _announce(self):

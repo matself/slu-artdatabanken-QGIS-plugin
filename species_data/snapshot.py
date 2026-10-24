@@ -8,6 +8,8 @@ import json
 from dataclasses import dataclass
 from typing import Callable, Optional
 
+from .counting import CancelledError
+
 # (WFS property, type) where type is one of: str, int, bool, date.
 FIELDS = (
     ("occurrenceId", "str"),
@@ -43,10 +45,6 @@ class Row:
     properties: dict
     x: float
     y: float
-
-
-class CancelledError(Exception):
-    pass
 
 
 def parse_page(text: str) -> list:
