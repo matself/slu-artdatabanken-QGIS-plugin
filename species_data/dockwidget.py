@@ -1,7 +1,8 @@
 """Dock widget for Species Data (SLU Artdatabanken).
 
 Code-only (no .ui file, so no uic differences between Qt5 and Qt6). The five
-tabs follow the structure of SLU Artdatabanken's own search page, Fynddata.
+sections follow the structure of SLU Artdatabanken's own search page, Fynddata,
+and share one scrolling window above the fixed count and create buttons.
 """
 from dataclasses import replace
 from datetime import date, datetime
@@ -12,6 +13,7 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsProject,
 )
+from qgis.gui import QgsCollapsibleGroupBox
 from qgis.PyQt.QtCore import QCoreApplication, QDate, Qt
 from qgis.PyQt.QtWidgets import (
     QApplication,
@@ -20,14 +22,16 @@ from qgis.PyQt.QtWidgets import (
     QDateEdit,
     QDockWidget,
     QFormLayout,
+    QFrame,
+    QGridLayout,
     QGroupBox,
     QLabel,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QRadioButton,
+    QScrollArea,
     QSpinBox,
-    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -73,13 +77,24 @@ class SpeciesDataDockWidget(QDockWidget):
 
         content = QWidget(self)
         layout = QVBoxLayout(content)
-        tabs = QTabWidget()
-        tabs.addTab(self._taxa_tab(), tr("Taxa"))
-        tabs.addTab(self._time_tab(), tr("Time"))
-        tabs.addTab(self._geography_tab(), tr("Geography"))
-        tabs.addTab(self._properties_tab(), tr("Properties"))
-        tabs.addTab(self._datasets_tab(), tr("Datasets"))
-        layout.addWidget(tabs)
+        sections = QWidget()
+        sections_layout = QVBoxLayout(sections)
+        for title, build in (
+            (tr("Taxa"), self._taxa_tab),
+            (tr("Time"), self._time_tab),
+            (tr("Geography"), self._geography_tab),
+            (tr("Properties"), self._properties_tab),
+            (tr("Datasets"), self._datasets_tab),
+        ):
+            box = QgsCollapsibleGroupBox(title)
+            QVBoxLayout(box).addWidget(build())
+            sections_layout.addWidget(box)
+        sections_layout.addStretch()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(sections)
+        layout.addWidget(scroll, 1)
 
         self.count_button = QPushButton(tr("Count observations"))
         self.count_button.clicked.connect(self.on_count)
@@ -149,6 +164,7 @@ class SpeciesDataDockWidget(QDockWidget):
         self.vascular_only = QCheckBox(tr("Vascular plants only"))
         self.vascular_only.setChecked(True)
         self.names = QPlainTextEdit()
+        self.names.setMaximumHeight(80)
         self.names.setPlaceholderText(
             tr("One species name per line, scientific or Swedish\n(for example: vitsippa)")
         )
@@ -224,15 +240,15 @@ class SpeciesDataDockWidget(QDockWidget):
         layout.addWidget(self.verified_only)
 
         box = QGroupBox(tr("Red list categories (none selected: all)"))
-        box_layout = QVBoxLayout(box)
+        box_layout = QGridLayout(box)
         self.redlist = {}
-        for code in REDLIST_CATEGORIES:
+        for i, code in enumerate(REDLIST_CATEGORIES):
             check = QCheckBox(code)
             self.redlist[code] = check
-            box_layout.addWidget(check)
+            box_layout.addWidget(check, i // 5, i % 5)
         threatened = QPushButton(tr("CR, EN, VU, NT"))
         threatened.clicked.connect(self._select_threatened)
-        box_layout.addWidget(threatened)
+        box_layout.addWidget(threatened, 2, 0, 1, 5)
         layout.addWidget(box)
         layout.addStretch()
         return tab
