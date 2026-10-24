@@ -32,6 +32,14 @@
       <translation>Räkna fynd</translation>
     </message>
     <message>
+      <source>Live layer (follows the map window)</source>
+      <translation>Levande lager (följer kartfönstret)</translation>
+    </message>
+    <message>
+      <source>Snapshot (downloaded and saved as GeoPackage)</source>
+      <translation>Ögonblicksbild (hämtas och sparas som GeoPackage)</translation>
+    </message>
+    <message>
       <source>Create layer</source>
       <translation>Skapa lager</translation>
     </message>
@@ -164,6 +172,10 @@
     <message>
       <source>At least {n} observations: too many. Narrow the search.</source>
       <translation>Minst {n} fynd: för många. Avgränsa sökningen.</translation>
+    </message>
+    <message>
+      <source>The layer could not be saved.</source>
+      <translation>Lagret kunde inte sparas.</translation>
     </message>
     <message>
       <source>About {n} observations. That is a lot for a dot map (warning from {w}).</source>

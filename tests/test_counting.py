@@ -50,14 +50,6 @@ def test_request_params_include_filter_and_paging():
     assert "Skåne" in params["filter"]
 
 
-def test_layer_uri_escapes_quotes():
-    uri = layer_uri(Query(municipality="O'Brien"))
-    assert uri.startswith("url='https://sosgeo.artdata.slu.se/geoserver/SOS/ows'")
-    assert "pagingEnabled='true'" in uri
-    assert "O\'Brien" in uri
-    assert "version='1.0.0'" in uri
-
-
 def test_provenance_mentions_source_and_disclaimer():
     from datetime import datetime
 
@@ -69,3 +61,14 @@ def test_provenance_mentions_source_and_disclaimer():
     assert "County: Skåne" in text
     assert "not developed, owned or endorsed by SLU" in text
     assert "at least" in provenance.abstract(Query(), Count(100000, False), datetime(2026, 1, 1))
+
+
+def test_layer_uri_for_live_layer():
+    uri = layer_uri("\"municipality\" = 'O''Brien'", restrict_to_map=True)
+    assert uri.startswith("url='https://sosgeo.artdata.slu.se/geoserver/SOS/ows'")
+    assert "restrictToRequestBBOX='1'" in uri
+    assert "version='1.0.0'" in uri
+    assert "O\\'\\'Brien" in uri
+    assert "restrictToRequestBBOX" not in layer_uri("", restrict_to_map=False)
+    assert "filter=" not in layer_uri("", restrict_to_map=False)
+    assert "\'" in layer_uri("\"a\" = 'b'", restrict_to_map=False)

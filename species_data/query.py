@@ -138,6 +138,57 @@ class Query:
         body = terms[0] if len(terms) == 1 else "<ogc:And>" + "".join(terms) + "</ogc:And>"
         return f"<ogc:Filter {_NS}>{body}</ogc:Filter>"
 
+    # -- QGIS live layers ----------------------------------------------------
+
+    def to_qgis_expression(self) -> str:
+        """QGIS expression for the ``filter`` of a live WFS layer.
+
+        Live layers follow the map window (``restrictToRequestBBOX``). The service
+        refuses a ``bbox`` together with its own filter, so QGIS has to build the
+        combined filter itself, and it can only translate a subset of expressions:
+        no booleans (compared as strings), no ``lower()`` or ``ILIKE``. Names are
+        therefore matched in the case the data uses: Swedish names in lower case,
+        scientific names as "Genus epithet". The map window is not part of the
+        expression, and neither is ``polygon_wgs84``.
+        """
+        if self.polygon_wgs84:
+            raise UnsupportedFilterError("live layers cannot use a polygon")
+        terms = []
+        if self.organism_group:
+            terms.append(_ex_eq("organismGroup", self.organism_group))
+        if self.taxon_ids:
+            terms.append(_ex_in("dyntaxaTaxonId", [int(i) for i in self.taxon_ids]))
+        if self.names:
+            swedish = _ex_in("vernacularName", [n.lower() for n in self.names])
+            genus_case = [n[:1].upper() + n[1:].lower() for n in self.names]
+            scientific = _ex_in("scientificName", genus_case)
+            terms.append(f"({swedish} OR {scientific})")
+        if self.county:
+            terms.append(_ex_eq("county", self.county))
+        if self.municipality:
+            terms.append(_ex_eq("municipality", self.municipality))
+        if self.date_from:
+            terms.append(_ex_cmp("endDate", ">=", f"{self.date_from.isoformat()}T00:00:00Z"))
+        if self.date_to:
+            bound = f"{self.date_to.isoformat()}{_END_OF_DAY_START_BOUND}"
+            terms.append(_ex_cmp("startDate", "<=", bound))
+        if self.occurrence == PRESENT:
+            terms.append(_ex_eq("isPresentObservation", "true"))
+        elif self.occurrence == ABSENT:
+            terms.append(_ex_eq("isPresentObservation", "false"))
+        if self.dataset_ids:
+            terms.append(_ex_in("dataProviderId", [int(i) for i in self.dataset_ids]))
+        if self.verified_only:
+            terms.append(_ex_eq("isVerified", "true"))
+        if self.redlist_categories:
+            terms.append(_ex_in("redlistCategory", list(self.redlist_categories)))
+        if self.exclude_uncertain_identification:
+            terms.append(_ex_eq("isUncertainIdentification", "false"))
+        if self.max_uncertainty_m is not None:
+            limit = int(self.max_uncertainty_m)
+            terms.append(_ex_cmp("coordinateUncertaintyInMeters", "<=", limit))
+        return " AND ".join(terms)
+
     # -- REST --------------------------------------------------------------
 
     def to_sos_filter(self) -> dict:
@@ -199,6 +250,22 @@ class Query:
         if self.exclude_uncertain_identification:
             body["determinationFilter"] = "NotUnsureDetermination"
         return body
+
+
+def _ex_value(value) -> str:
+    return str(value) if isinstance(value, int) else "'" + str(value).replace("'", "''") + "'"
+
+
+def _ex_eq(field: str, value) -> str:
+    return f'"{field}" = {_ex_value(value)}'
+
+
+def _ex_cmp(field: str, operator: str, value) -> str:
+    return f'"{field}" {operator} {_ex_value(value)}'
+
+
+def _ex_in(field: str, values: list) -> str:
+    return f'"{field}" IN ({", ".join(_ex_value(v) for v in values)})'
 
 
 def _prop(field: str) -> str:

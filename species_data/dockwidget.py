@@ -3,9 +3,11 @@
 Code-only (no .ui file, so no uic differences between Qt5 and Qt6). The five
 tabs follow the structure of SLU Artdatabanken's own search page, Fynddata.
 """
+from dataclasses import replace
 from datetime import date, datetime
 
 from qgis.core import (
+    QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsProject,
@@ -31,6 +33,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from . import counting, layers, provenance
+from .download import SnapshotTask
 from .net import NetworkError, feature_probe
 from .query import (
     ABSENT,
@@ -82,10 +85,14 @@ class SpeciesDataDockWidget(QDockWidget):
         self.count_button.clicked.connect(self.on_count)
         self.count_label = QLabel("")
         self.count_label.setWordWrap(True)
+        self.layer_kind = QComboBox()
+        self.layer_kind.addItem(tr("Live layer (follows the map window)"), "live")
+        self.layer_kind.addItem(tr("Snapshot (downloaded and saved as GeoPackage)"), "snapshot")
         self.create_button = QPushButton(tr("Create layer"))
         self.create_button.clicked.connect(self.on_create)
         layout.addWidget(self.count_button)
         layout.addWidget(self.count_label)
+        layout.addWidget(self.layer_kind)
         layout.addWidget(self.create_button)
 
         source = QLabel(
@@ -318,12 +325,45 @@ class SpeciesDataDockWidget(QDockWidget):
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
-        name = self._layer_name(query, result)
-        layer = layers.create_layer(query, name, result)
+        if self.layer_kind.currentData() == "live":
+            self._create_live_layer(query, result)
+        else:
+            self._create_snapshot(query, result)
+
+    def _create_live_layer(self, query, result):
+        follow_map = query.bbox_wgs84 is not None
+        # QGIS adds the map window to every request itself.
+        layer_query = replace(query, bbox_wgs84=None)
+        name = self._layer_name(query, None)
+        layer = layers.create_live_layer(layer_query, name, result, follow_map)
         if layer is None:
             QMessageBox.warning(self, tr("Species Data"), tr("The layer could not be opened."))
             return
         QgsProject.instance().addMapLayer(layer)
+        self._announce()
+
+    def _create_snapshot(self, query, result):
+        self.create_button.setEnabled(False)
+        name = self._layer_name(query, result)
+
+        def done(rows):
+            self.create_button.setEnabled(True)
+            layer = layers.create_snapshot_layer(rows, query, name, result)
+            if layer is None:
+                QMessageBox.warning(self, tr("Species Data"), tr("The layer could not be saved."))
+                return
+            QgsProject.instance().addMapLayer(layer)
+            self._announce()
+
+        def failed(message):
+            self.create_button.setEnabled(True)
+            QMessageBox.warning(self, tr("Species Data"), message)
+
+        self._task = SnapshotTask(query, result.value, done, failed)
+        self._task.taskTerminated.connect(lambda: self.create_button.setEnabled(True))
+        QgsApplication.taskManager().addTask(self._task)
+
+    def _announce(self):
         self.iface.messageBar().pushMessage(
             tr("Species Data"), provenance.citation(datetime.now()), duration=8
         )
@@ -331,5 +371,5 @@ class SpeciesDataDockWidget(QDockWidget):
     @staticmethod
     def _layer_name(query, result):
         what = ", ".join(query.names) if query.names else (query.organism_group or tr("Species"))
-        return f"{what} ({result.value})"
+        return f"{what} ({result.value})" if result else what
 
