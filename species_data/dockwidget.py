@@ -107,6 +107,31 @@ class SpeciesDataDockWidget(QDockWidget):
         layout.addWidget(source)
         layout.addStretch()
         self.setWidget(content)
+        self._watch_inputs(content)
+        iface.mapCanvas().extentsChanged.connect(self._map_moved)
+
+    def _watch_inputs(self, root):
+        """Clear the count text when an input changes: it no longer describes the search."""
+        signals = (
+            (QPlainTextEdit, "textChanged"),
+            (QComboBox, "currentIndexChanged"),
+            (QCheckBox, "toggled"),
+            (QRadioButton, "toggled"),
+            (QSpinBox, "valueChanged"),
+            (QDateEdit, "dateChanged"),
+        )
+        for widget_type, signal in signals:
+            for widget in root.findChildren(widget_type):
+                if widget is not self.layer_kind:
+                    getattr(widget, signal).connect(self._clear_count)
+
+    def _clear_count(self, *_):
+        self._count = None
+        self.count_label.setText("")
+
+    def _map_moved(self):
+        if self.area_canvas.isChecked() and self.layer_kind.currentData() == "snapshot":
+            self._clear_count()
 
     # -- tabs --------------------------------------------------------------
 
