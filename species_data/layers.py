@@ -1,9 +1,8 @@
-"""Build the observation layer: temporary, or saved as a GeoPackage where the user chose."""
+"""Build the temporary observation layer. The user saves it with QGIS own tools."""
 from datetime import datetime
 
 from qgis.core import (
     QgsCoordinateReferenceSystem,
-    QgsCoordinateTransformContext,
     QgsFeature,
     QgsField,
     QgsFields,
@@ -12,7 +11,6 @@ from qgis.core import (
     QgsMarkerSymbol,
     QgsPointXY,
     QgsSingleSymbolRenderer,
-    QgsVectorFileWriter,
     QgsVectorLayer,
 )
 from qgis.PyQt.QtCore import QDateTime, QMetaType, Qt, QTimeZone
@@ -31,34 +29,16 @@ _TYPES = {
 _STOCKHOLM = QTimeZone(b"Europe/Stockholm")
 
 
-def create_snapshot_layer(
-    rows,
-    fields: tuple,
-    query: Query,
-    name: str,
-    count: Count,
-    path: str = "",
-    retrieved: datetime = None,
+def create_layer(
+    rows, fields: tuple, query: Query, name: str, count: Count, retrieved: datetime = None
 ):
-    """The observations as a layer, or None on failure.
+    """The observations as a temporary (memory) layer.
 
-    With ``path`` the layer is written to that GeoPackage (replacing the file). Without
-    it the layer is temporary: QGIS marks it and offers to save it permanently.
+    Nothing is written to disk. QGIS marks the layer as temporary and offers to make it
+    permanent, or the user can export it with "Save Features As".
     """
     retrieved = retrieved or datetime.now()
     layer = _memory_layer(rows, fields)
-    if path:
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.driverName = "GPKG"
-        options.layerName = "observations"
-        error, *_ = QgsVectorFileWriter.writeAsVectorFormatV3(
-            layer, path, QgsCoordinateTransformContext(), options
-        )
-        if error != QgsVectorFileWriter.WriterError.NoError:
-            return None
-        layer = QgsVectorLayer(f"{path}|layername=observations", name, "ogr")
-        if not layer.isValid():
-            return None
     layer.setName(name)
     layer.setRenderer(QgsSingleSymbolRenderer(_symbol()))
     layer.setMetadata(_metadata(query, name, count, retrieved))
