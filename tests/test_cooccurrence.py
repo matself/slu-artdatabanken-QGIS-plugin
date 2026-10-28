@@ -65,3 +65,11 @@ def test_years_and_counts_per_species():
 
 def test_empty_input():
     assert find_places([], ("A",)).places == []
+
+
+def test_centre_and_radius_follow_the_observations_not_the_outliers():
+    heavy = [node("A", i * 10, observations=50) for i in range(3)] + [node("B", 15, observations=50)]
+    outlier = node("A", 330, observations=1)
+    (place,) = find_places([*heavy, outlier], ("A", "B"), Params(max_gap=400, max_radius=0)).places
+    assert abs(place.x - 15) < 5
+    assert place.radius < 30  # the lone outlier 315 m away is outside the 90 % core

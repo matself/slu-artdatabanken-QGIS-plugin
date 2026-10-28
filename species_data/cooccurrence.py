@@ -6,12 +6,14 @@ most the chosen gap plus their two radii. The linking and the limit on the size 
 are the ones of ``clustering.cluster``, applied to the localities instead of to
 observations, so a string of localities along a shore is split in the same way.
 """
+import math
 from dataclasses import dataclass, field
 from typing import Optional
 
 from . import clustering
 
-# A locality of one species, with the facts the co-occurrence needs.
+# The radius of a place holds this share of its observations (the rest are outliers).
+CORE_SHARE = 0.9
 CURRENT_CATEGORIES = (clustering.STRONG, clustering.SPORADIC)
 
 
@@ -41,7 +43,7 @@ class Place:
     id: int
     x: float
     y: float
-    radius: float
+    radius: float  # metres from (x, y) that hold CORE_SHARE of the observations
     members: list  # indexes into the input nodes
     species: tuple  # the species found here, sorted
     localities: dict  # species -> number of localities of that species here
@@ -91,12 +93,13 @@ def find_places(nodes: list, wanted: tuple, params: Params = Params()) -> Result
         found = tuple(sorted(counts))
         firsts = [nodes[i].first_year for i in members if nodes[i].first_year]
         lasts = [nodes[i].last_year for i in members if nodes[i].last_year]
+        x, y, radius = _centre_and_radius([nodes[i] for i in members])
         result.places.append(
             Place(
                 id=locality.id,
-                x=locality.x,
-                y=locality.y,
-                radius=locality.radius,
+                x=x,
+                y=y,
+                radius=radius,
                 members=members,
                 species=found,
                 localities=counts,
@@ -106,3 +109,23 @@ def find_places(nodes: list, wanted: tuple, params: Params = Params()) -> Result
             )
         )
     return result
+
+
+def _centre_and_radius(members: list) -> tuple:
+    """Centre and radius of a place from where the observations are.
+
+    The centre is the mean of the locality centres weighted by their number of observations.
+    The radius is the distance from it that holds ``CORE_SHARE`` of the observations, so a few
+    outlying localities do not stretch it.
+    """
+    weights = [max(n.observations, 1) for n in members]
+    total = sum(weights)
+    x = sum(n.x * w for n, w in zip(members, weights)) / total
+    y = sum(n.y * w for n, w in zip(members, weights)) / total
+    by_distance = sorted((math.hypot(n.x - x, n.y - y), w) for n, w in zip(members, weights))
+    reached = 0
+    for distance, weight in by_distance:
+        reached += weight
+        if reached >= CORE_SHARE * total:
+            return x, y, distance
+    return x, y, by_distance[-1][0]
