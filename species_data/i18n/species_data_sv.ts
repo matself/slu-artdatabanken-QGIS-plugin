@@ -59,6 +59,14 @@
       <translation>Vaga fynd ansluts bara till en lokal över (m)</translation>
     </message>
     <message>
+      <source>A string of observations, for example along a shore, is split up when it is wider than this. 0 means no limit.</source>
+      <translation>En rad av fynd, till exempel längs en strand, delas upp när den är bredare än så. 0 betyder ingen gräns.</translation>
+    </message>
+    <message>
+      <source>Largest locality radius (m, 0 = no limit)</source>
+      <translation>Största lokalradie (m, 0 = ingen gräns)</translation>
+    </message>
+    <message>
       <source>Current: last record at most this many years ago</source>
       <translation>Aktuell: senaste fyndet högst så många år sedan</translation>
     </message>

@@ -108,7 +108,8 @@ Sällsynta arter rapporteras ofta flera gånger från samma plats, med olika nog
 1. Hämta fynd på fliken Hämta, eller öppna en sparad GeoPackage. Lagret måste vara hämtat med pluginet och ha sin metadata kvar: spara med *Exportera > Spara objekt som* och låt *Spara lagrets metadata* vara ikryssad. Annars säger fliken vad som saknas.
 2. Välj lagret och ställ in parametrarna. Två fynd hör ihop när avståndet mellan dem är högst *sammanlänkningsavståndet* plus (om rutan är ikryssad) de två fyndens koordinatnoggrannhet. Kedjor av fynd blir en lokal.
 3. Fynd som är mindre exakta än gränsen utelämnas, och fynd som är vagare än den andra gränsen ansluts bara till närmaste lokal, så att ett vagt fynd inte binder ihop två skilda lokaler.
-4. Resultatet blir ett nytt tillfälligt lager med en punkt per lokal och art: antal fynd, antal år, första och sista år, radie och klass (stark eller sporadisk aktuell, historisk, ej återfunnen, osäker).
+4. En rad av fynd, till exempel längs en strand, skulle annars bli en enda lång lokal. Därför delas lokaler som är bredare än *största radien* (standard 100 m, 0 = ingen gräns) upp i flera.
+5. Resultatet blir ett nytt tillfälligt lager med en punkt per lokal och art: antal fynd, antal år, första och sista år, radie och klass (stark eller sporadisk aktuell, historisk, ej återfunnen, osäker).
 
 ## 6. Data, villkor och personuppgifter
 

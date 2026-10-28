@@ -16,26 +16,26 @@ def groups(result):
 
 def test_exact_points_link_within_distance_only():
     points = [Point(0, 0, 2024, 5), Point(80, 0, 2024, 5), Point(500, 0, 2024, 5)]
-    assert groups(cluster(points, Params(link_distance=100))) == [[0, 1], [2]]
+    assert groups(cluster(points, Params(link_distance=100, max_radius=0))) == [[0, 1], [2]]
 
 
 def test_uncertainty_widens_the_link_distance():
     points = [Point(0, 0, 2024, 200), Point(300, 0, 2024, 100)]
-    assert groups(cluster(points, Params(link_distance=0, uncertainty_weight=1))) == [[0, 1]]
-    assert groups(cluster(points, Params(link_distance=0, uncertainty_weight=0))) == [[0], [1]]
+    assert groups(cluster(points, Params(link_distance=0, uncertainty_weight=1, max_radius=0))) == [[0, 1]]
+    assert groups(cluster(points, Params(link_distance=0, uncertainty_weight=0, max_radius=0))) == [[0], [1]]
 
 
 def test_chain_of_precise_points_is_one_locality():
     points = [Point(i * 90, 0, 2024, 5) for i in range(6)]
-    assert groups(cluster(points, Params(link_distance=100))) == [[0, 1, 2, 3, 4, 5]]
+    assert groups(cluster(points, Params(link_distance=100, max_radius=0))) == [[0, 1, 2, 3, 4, 5]]
 
 
 def test_vague_point_does_not_bridge_two_localities():
     points = [Point(0, 0, 2024, 5), Point(600, 0, 2024, 5), Point(300, 0, 2024, 400)]
-    result = cluster(points, Params(link_distance=50, max_uncertainty=500, bridge_uncertainty=100))
+    result = cluster(points, Params(link_distance=50, max_uncertainty=500, bridge_uncertainty=100, max_radius=0))
     # the vague point joins the nearest of the two (a tie goes to the first), not both
     assert len(result.localities) == 2
-    bridged = cluster(points, Params(link_distance=50, max_uncertainty=500, bridge_uncertainty=1000))
+    bridged = cluster(points, Params(link_distance=50, max_uncertainty=500, bridge_uncertainty=1000, max_radius=0))
     assert len(bridged.localities) == 1
 
 
@@ -48,13 +48,13 @@ def test_points_above_max_uncertainty_are_left_out():
 
 def test_missing_uncertainty_counts_as_the_largest_allowed():
     points = [Point(0, 0, 2024, 5), Point(550, 0, 2024, None)]
-    result = cluster(points, Params(link_distance=50, max_uncertainty=500, bridge_uncertainty=100))
+    result = cluster(points, Params(link_distance=50, max_uncertainty=500, bridge_uncertainty=100, max_radius=0))
     assert groups(result) == [[0, 1]]
 
 
 def test_centre_is_pulled_towards_precise_points():
     points = [Point(0, 0, 2024, 1), Point(100, 0, 2024, 400)]
-    (loc,) = cluster(points, Params(link_distance=0, bridge_uncertainty=1000)).localities
+    (loc,) = cluster(points, Params(link_distance=0, bridge_uncertainty=1000, max_radius=0)).localities
     assert loc.x < 10
     assert loc.radius >= loc.x
 
@@ -82,3 +82,18 @@ def test_years_and_counts():
 def test_empty_input():
     result = cluster([])
     assert result.localities == [] and result.left_out == []
+
+
+def test_a_string_of_points_is_split_by_max_radius():
+    string = [Point(i * 40, 0, 2024, 5) for i in range(30)]  # 1.2 km long
+    whole = cluster(string, Params(link_distance=100, max_radius=0))
+    assert len(whole.localities) == 1
+    split = cluster(string, Params(link_distance=100, max_radius=100))
+    assert 5 <= len(split.localities) <= 12
+    assert sorted(m for loc in split.localities for m in loc.members) == list(range(30))
+    assert all(loc.radius <= 100 for loc in split.localities)
+
+
+def test_max_radius_leaves_small_localities_alone():
+    points = [Point(0, 0, 2024, 5), Point(50, 0, 2024, 5)]
+    assert groups(cluster(points, Params(link_distance=100, max_radius=100))) == [[0, 1]]

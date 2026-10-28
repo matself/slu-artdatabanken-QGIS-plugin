@@ -126,6 +126,14 @@ class LocalityTab(QWidget):
             )
         )
         form.addRow(tr("Vague observations only join one locality above (m)"), self.bridge_uncertainty)
+        self.max_radius = self._spin(0, 100000, int(clustering.Params().max_radius))
+        self.max_radius.setToolTip(
+            tr(
+                "A string of observations, for example along a shore, is split up when it is "
+                "wider than this. 0 means no limit."
+            )
+        )
+        form.addRow(tr("Largest locality radius (m, 0 = no limit)"), self.max_radius)
         self.recent_years = self._spin(0, 100, 5)
         form.addRow(tr("Current: last record at most this many years ago"), self.recent_years)
         self.historical_years = self._spin(1, 200, 15)
@@ -211,6 +219,7 @@ class LocalityTab(QWidget):
             uncertainty_weight=1.0 if self.use_uncertainty.isChecked() else 0.0,
             max_uncertainty=self.max_uncertainty.value(),
             bridge_uncertainty=self.bridge_uncertainty.value(),
+            max_radius=self.max_radius.value(),
             reference_year=date.today().year,
             recent_years=self.recent_years.value(),
             historical_years=self.historical_years.value(),
@@ -328,7 +337,8 @@ def _metadata(name, source, params):
         f"link distance {params.link_distance:g} m, "
         f"{'with' if params.uncertainty_weight else 'without'} coordinate uncertainty, "
         f"observations less precise than {params.max_uncertainty:g} m left out, "
-        f"vague observations (over {params.bridge_uncertainty:g} m) join one locality only.",
+        f"vague observations (over {params.bridge_uncertainty:g} m) join one locality only, "
+        f"localities wider than a radius of {params.max_radius:g} m split up (0 = no limit).",
         provenance.DISCLAIMER,
     ]
     meta.setAbstract("\n".join(lines))

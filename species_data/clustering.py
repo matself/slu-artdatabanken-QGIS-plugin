@@ -34,6 +34,7 @@ class Params:
     uncertainty_weight: float = 1.0  # 0 ignores uncertainty, 1 adds it in full
     max_uncertainty: float = 500.0  # metres. Less precise observations are left out
     bridge_uncertainty: float = 100.0  # metres. Vaguer observations join one locality only
+    max_radius: float = 100.0  # metres. Wider localities are split up, 0 = no limit
     reference_year: int = 2026
     recent_years: int = 5  # last observation at most this many years back = current
     historical_years: int = 15  # last observation more than this many years back = historical
@@ -155,9 +156,45 @@ def cluster(points: list, params: Params = Params()) -> Result:
     groups = {}
     for i in kept:
         groups.setdefault(sets.find(i), []).append(i)
+    if params.max_radius > 0:
+        groups = {
+            key: part
+            for number, members in enumerate(groups.values())
+            for key, part in _split(number, members, points, params)
+        }
     ordered = sorted(groups.values(), key=lambda g: g[0])
     result.localities = [_locality(n + 1, g, points, params) for n, g in enumerate(ordered)]
     return result
+
+
+def _split(number, members, points, params):
+    """Split a chain of linked observations that is wider than ``max_radius``.
+
+    Along a shore or a road the observations form a string, and linking them makes one
+    long locality. The most precise observations become centres, each other observation
+    goes to the nearest centre, and one that is further than ``max_radius`` from every
+    centre becomes a centre itself.
+    """
+    if len(members) < 2 or _extent_radius(members, points) <= params.max_radius:
+        return [((number, 0), members)]
+    centres = []  # indexes of the observations that start a part
+    parts = {}
+    for i in sorted(members, key=lambda m: (_uncertainty(points[m], params), m)):
+        nearest = min(
+            ((_distance(points[i], points[c]), c) for c in centres), default=(math.inf, None)
+        )
+        if nearest[0] <= params.max_radius:
+            parts[nearest[1]].append(i)
+        else:
+            centres.append(i)
+            parts[i] = [i]
+    return [((number, c), sorted(part)) for c, part in parts.items()]
+
+
+def _extent_radius(members, points):
+    cx = sum(points[i].x for i in members) / len(members)
+    cy = sum(points[i].y for i in members) / len(members)
+    return max(math.hypot(points[i].x - cx, points[i].y - cy) for i in members)
 
 
 def _locality(number, members, points, params):
