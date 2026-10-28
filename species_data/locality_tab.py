@@ -54,6 +54,9 @@ CATEGORY_COLORS = {
 }
 
 
+LOCALITY_FIELD = "locality_id"
+
+
 def tr_noop(text):
     """Mark a string for translation without translating it yet (see scripts/translations.py)."""
     return text
@@ -144,6 +147,18 @@ class LocalityTab(QWidget):
         self.strong_years = self._spin(1, 100, 5)
         form.addRow(tr("Strong: years with records needed"), self.strong_years)
         layout.addLayout(form)
+        self.write_ids = QCheckBox(
+            tr("Write the locality number to the observation layer (field locality_id)")
+        )
+        self.write_ids.setChecked(True)
+        self.write_ids.setToolTip(
+            tr(
+                "Adds the field locality_id to the observation layer, or overwrites it, so each "
+                "observation shows which locality it belongs to. Run again with other settings to "
+                "renumber. The numbers are only comparable within one run."
+            )
+        )
+        layout.addWidget(self.write_ids)
 
         self.status = QLabel("")
         self.status.setWordWrap(True)
@@ -198,6 +213,7 @@ class LocalityTab(QWidget):
         has_flag = "isNotRediscoveredObservation" in names
         has_present = "isPresentObservation" in names
         by_species = {}
+        self._fids = {}  # feature ids, in the same order as the points of each species
         for feature in layer.getFeatures():
             geometry = feature.geometry()
             if geometry.isNull():
@@ -214,6 +230,7 @@ class LocalityTab(QWidget):
             by_species.setdefault(species, []).append(
                 clustering.Point(point.x(), point.y(), year, uncertainty, not_refound)
             )
+            self._fids.setdefault(species, []).append(feature.id())
         return by_species
 
     def _params(self) -> clustering.Params:
@@ -260,13 +277,20 @@ class LocalityTab(QWidget):
         layer = build_layer(results, self._source, params)
         self._finished()
         QgsProject.instance().addMapLayer(layer)
+        written = ""
+        if self.write_ids.isChecked():
+            try:
+                write_locality_ids(self._source, assignments(results, self._fids))
+                written = " " + tr("The locality number is in the field locality_id of the observation layer.")
+            except RuntimeError as exc:
+                written = " " + tr("The locality number could not be written: {why}").format(why=exc)
         left_out = sum(len(r.left_out) for r in results.values())
         message = tr("{n} localities from {m} observations.").format(
             n=layer.featureCount(), m=sum(len(p) for p in self._points.values())
         )
         if left_out:
             message += " " + tr("{n} observations were less precise than the limit and left out.").format(n=left_out)
-        self.status.setText(message)
+        self.status.setText(message + written)
         self.iface.messageBar().pushMessage(tr("Species Data"), provenance.citation(datetime.now()), duration=8)
 
 
@@ -287,6 +311,46 @@ def _is_point(layer) -> bool:
     return layer.geometryType() == Qgis.GeometryType.Point
 
 
+def _offsets(results: dict) -> dict:
+    """First number minus one for each species, so locality numbers are unique in one run."""
+    offsets, total = {}, 0
+    for species, result in sorted(results.items()):
+        offsets[species] = total
+        total += len(result.localities)
+    return offsets
+
+
+def assignments(results: dict, fids: dict) -> dict:
+    """{feature id: locality number} for the observations that belong to a locality."""
+    offsets = _offsets(results)
+    found = {}
+    for species, result in results.items():
+        for loc in result.localities:
+            for member in loc.members:
+                found[fids[species][member]] = offsets[species] + loc.id
+    return found
+
+
+def write_locality_ids(layer, numbers: dict):
+    """Write the field ``locality_id`` for every feature: the number, or NULL when there is none.
+
+    The field is added when missing and overwritten otherwise, so a new run with other
+    settings replaces the old numbers.
+    """
+    if layer.fields().indexOf(LOCALITY_FIELD) < 0:
+        if not layer.dataProvider().addAttributes([QgsField(LOCALITY_FIELD, QMetaType.Type.Int)]):
+            raise RuntimeError(tr("the layer does not allow new fields"))
+        layer.updateFields()
+    index = layer.fields().indexOf(LOCALITY_FIELD)
+    values = {fid: {index: numbers.get(fid)} for fid in layer.allFeatureIds()}
+    if layer.isEditable():
+        for fid, change in values.items():
+            layer.changeAttributeValue(fid, index, change[index])
+    elif not layer.dataProvider().changeAttributeValues(values):
+        raise RuntimeError(tr("the layer does not allow changes"))
+    layer.triggerRepaint()
+
+
 def build_layer(results: dict, source, params: clustering.Params):
     """A temporary layer with one point per locality."""
     layer = QgsVectorLayer(f"Point?crs={CRS}", f"{source.name()}: localities", "memory")
@@ -304,12 +368,13 @@ def build_layer(results: dict, source, params: clustering.Params):
     layer.dataProvider().addAttributes([QgsField(name, kind) for name, kind in fields])
     layer.updateFields()
     features = []
+    offsets = _offsets(results)
     for species, result in sorted(results.items()):
         for loc in result.localities:
             feature = QgsFeature(layer.fields())
             feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(loc.x, loc.y)))
             feature.setAttributes(
-                [species, loc.id, loc.category, loc.count, len(loc.years), loc.first_year,
+                [species, offsets[species] + loc.id, loc.category, loc.count, len(loc.years), loc.first_year,
                  loc.last_year, round(loc.radius), loc.not_refound_count]
             )
             features.append(feature)

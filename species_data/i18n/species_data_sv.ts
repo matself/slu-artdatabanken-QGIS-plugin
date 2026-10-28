@@ -86,6 +86,14 @@
       <translation>Stark: antal år med fynd som krävs</translation>
     </message>
     <message>
+      <source>Write the locality number to the observation layer (field locality_id)</source>
+      <translation>Skriv lokalnumret till fyndlagret (fältet locality_id)</translation>
+    </message>
+    <message>
+      <source>Adds the field locality_id to the observation layer, or overwrites it, so each observation shows which locality it belongs to. Run again with other settings to renumber. The numbers are only comparable within one run.</source>
+      <translation>Lägger till fältet locality_id i fyndlagret, eller skriver över det, så att varje fynd visar vilken lokal det tillhör. Kör igen med andra inställningar för att numrera om. Numren går bara att jämföra inom en körning.</translation>
+    </message>
+    <message>
       <source>Group into localities</source>
       <translation>Gruppera till lokaler</translation>
     </message>
@@ -118,8 +126,24 @@
       <translation>Fält som saknas: {fields}.</translation>
     </message>
     <message>
+      <source>the layer does not allow new fields</source>
+      <translation>lagret tillåter inte nya fält</translation>
+    </message>
+    <message>
+      <source>the layer does not allow changes</source>
+      <translation>lagret tillåter inte ändringar</translation>
+    </message>
+    <message>
+      <source>The locality number is in the field locality_id of the observation layer.</source>
+      <translation>Lokalnumret finns i fältet locality_id i fyndlagret.</translation>
+    </message>
+    <message>
       <source>{n} observations were less precise than the limit and left out.</source>
       <translation>{n} fynd var mindre exakta än gränsen och utelämnades.</translation>
+    </message>
+    <message>
+      <source>The locality number could not be written: {why}</source>
+      <translation>Lokalnumret kunde inte skrivas: {why}</translation>
     </message>
   </context>
   <context>
