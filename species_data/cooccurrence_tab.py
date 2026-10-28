@@ -19,12 +19,15 @@ from qgis.core import (
     QgsGeometry,
     QgsLayerMetadata,
     QgsMarkerSymbol,
+    QgsPalLayerSettings,
     QgsPointXY,
     QgsProject,
     QgsRuleBasedRenderer,
+    QgsTextFormat,
     QgsVectorLayer,
+    QgsVectorLayerSimpleLabeling,
 )
-from qgis.gui import QgsMapLayerComboBox
+from qgis.gui import QgsCollapsibleGroupBox, QgsMapLayerComboBox
 from qgis.PyQt.QtCore import QCoreApplication, QMetaType, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
@@ -41,7 +44,8 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from . import cooccurrence, provenance
+from . import cooccurrence, provenance, settings
+from .settings_widgets import StoredSettingsRow, remember, remember_value, remembered, remembered_value
 from .wfs import CRS
 
 # What a locality layer from the Localities tab must have.
@@ -64,6 +68,18 @@ HEAT_RADIUS_MM = 10
 # Places with one species weigh nothing, several species weigh n - 1, and every chosen species
 # together weighs one more, so only co-occurrence lights up the map.
 HEAT_WEIGHT = '"n_species" - 1 + if("all_species", 1, 0)'
+
+
+def tr_noop(text):
+    """Mark a string for translation without translating it yet (see scripts/translations.py)."""
+    return text
+
+
+SIZE_LABELS = {
+    "strict": tr_noop("Strict"),
+    "standard": tr_noop("Standard"),
+    "generous": tr_noop("Generous"),
+}
 
 
 def tr(text):
@@ -92,37 +108,49 @@ class CooccurrenceTab(QWidget):
         self.species_list.setMaximumHeight(120)
         layout.addWidget(self.species_list)
 
-        params = QFormLayout()
-        self.max_gap = self._spin(0, 5000, int(cooccurrence.Params().max_gap))
+        # The size of a place is the one thing most users need to choose.
+        form2 = QFormLayout()
+        self.size_box = QComboBox()
+        for name, _size in settings.SIZE_PRESETS:
+            self.size_box.addItem(tr(SIZE_LABELS[name]), name)
+        self.size_box.addItem(tr("Custom (see Advanced)"), settings.CUSTOM)
+        self.size_box.setToolTip(
+            tr("How close the localities of different species must be to count as one place.")
+        )
+        form2.addRow(tr("Place size"), self.size_box)
+        self.style_box = QComboBox()
+        self.style_box.addItem(tr("Points"), POINTS)
+        self.style_box.addItem(tr("Heat map"), HEAT)
+        form2.addRow(tr("Show as"), self.style_box)
+        layout.addLayout(form2)
+        self.only_current = QCheckBox(tr("Only current localities (recent records)"))
+        layout.addWidget(self.only_current)
+
+        # Everything else, with the values of the standard size, is under Advanced.
+        advanced = QgsCollapsibleGroupBox(tr("Advanced"))
+        advanced.setCollapsed(True)
+        more = QFormLayout(advanced)
+        defaults = cooccurrence.Params()
+        self.max_gap = self._spin(0, 5000, int(defaults.max_gap))
         self.max_gap.setToolTip(
             tr("Localities of different species belong to the same place when their centres are "
                "at most this far apart, plus the radii of the two localities.")
         )
-        params.addRow(tr("Largest gap between localities (m)"), self.max_gap)
-        self.max_radius = self._spin(0, 100000, int(cooccurrence.Params().max_radius))
+        more.addRow(tr("Largest gap between localities (m)"), self.max_gap)
+        self.max_radius = self._spin(0, 100000, int(defaults.max_radius))
         self.max_radius.setToolTip(tr("A place wider than this is split up. 0 means no limit."))
-        params.addRow(tr("Largest place radius (m, 0 = no limit)"), self.max_radius)
-        layout.addLayout(params)
-        look = QFormLayout()
-        self.style_box = QComboBox()
-        self.style_box.addItem(tr("Points"), POINTS)
-        self.style_box.addItem(tr("Heat map"), HEAT)
-        look.addRow(tr("Show as"), self.style_box)
+        more.addRow(tr("Largest place radius (m, 0 = no limit)"), self.max_radius)
+        self.count_not_refound = QCheckBox(tr('Count "searched for, not found" as present'))
+        more.addRow(self.count_not_refound)
         self.heat_radius = self._spin(1, 100, HEAT_RADIUS_MM)
         self.heat_radius.setToolTip(
             tr("Radius of the heat in millimetres on the screen. Places with all species weigh most, "
                "places with one species do not count.")
         )
-        look.addRow(tr("Heat map radius (mm)"), self.heat_radius)
-        self.style_box.currentIndexChanged.connect(
-            lambda: self.heat_radius.setEnabled(self.style_box.currentData() == HEAT)
-        )
-        self.heat_radius.setEnabled(False)
-        layout.addLayout(look)
-        self.only_current = QCheckBox(tr("Only current localities (recent records)"))
-        self.count_not_refound = QCheckBox(tr('Count "searched for, not found" as present'))
-        layout.addWidget(self.only_current)
-        layout.addWidget(self.count_not_refound)
+        more.addRow(tr("Heat map radius (mm)"), self.heat_radius)
+        layout.addWidget(advanced)
+        self.stored = StoredSettingsRow(settings.PLACES_KEY, cooccurrence.Params, self.apply)
+        layout.addWidget(self.stored)
 
         self.status = QLabel("")
         self.status.setWordWrap(True)
@@ -132,9 +160,57 @@ class CooccurrenceTab(QWidget):
         layout.addWidget(self.run_button)
         layout.addStretch()
 
+        # The size choice and the two values it sets follow each other.
+        self.size_box.currentIndexChanged.connect(self._size_chosen)
+        for box in (self.max_gap, self.max_radius):
+            box.valueChanged.connect(self._size_from_values)
+        self.style_box.currentIndexChanged.connect(self._style_changed)
+        remembered_params = remembered("places", cooccurrence.Params)
+        if remembered_params:
+            self.apply(remembered_params)
+        else:
+            self._size_from_values()
+        self.style_box.setCurrentIndex(max(0, self.style_box.findData(remembered_value("places_style", POINTS))))
+        self.heat_radius.setValue(int(remembered_value("places_heat_radius", HEAT_RADIUS_MM)))
+        self._style_changed()
         self.layer_box.layerChanged.connect(self._layer_changed)
         self.species_list.itemChanged.connect(lambda *_: self._refresh())
         self._layer_changed(self.layer_box.currentLayer())
+
+    # -- size and settings ---------------------------------------------------------------
+
+    def _size_chosen(self):
+        name = self.size_box.currentData()
+        if name == settings.CUSTOM:
+            return
+        for key, value in settings.place_values(settings.size_of(name)).items():
+            box = getattr(self, key)
+            box.blockSignals(True)
+            box.setValue(int(value))
+            box.blockSignals(False)
+
+    def _size_from_values(self, *_):
+        name = settings.preset_name(
+            {"max_gap": self.max_gap.value(), "max_radius": self.max_radius.value()},
+            settings.place_values,
+        )
+        self.size_box.blockSignals(True)
+        self.size_box.setCurrentIndex(self.size_box.findData(name))
+        self.size_box.blockSignals(False)
+
+    def _style_changed(self, *_):
+        self.heat_radius.setEnabled(self.style_box.currentData() == HEAT)
+
+    def apply(self, params: cooccurrence.Params):
+        """Put the values of ``params`` in the controls."""
+        self.only_current.setChecked(params.only_current)
+        self.count_not_refound.setChecked(params.count_not_refound)
+        for key in ("max_gap", "max_radius"):
+            box = getattr(self, key)
+            box.blockSignals(True)
+            box.setValue(int(getattr(params, key)))
+            box.blockSignals(False)
+        self._size_from_values()
 
     @staticmethod
     def _spin(low, high, value):
@@ -225,6 +301,9 @@ class CooccurrenceTab(QWidget):
             return
         wanted = self._chosen()
         params = self._params()
+        remember("places", params)
+        remember_value("places_style", self.style_box.currentData())
+        remember_value("places_heat_radius", self.heat_radius.value())
         result = cooccurrence.find_places(self._nodes(layer), wanted, params)
         if not result.places:
             QMessageBox.information(self, tr("Species Data"), tr("No places found."))
@@ -274,6 +353,8 @@ def build_layer(result, source, params, style=None, heat_radius_mm=None):
         layer.setRenderer(_heat_renderer(heat_radius_mm or HEAT_RADIUS_MM))
     else:
         layer.setRenderer(_renderer(len(result.wanted)))
+        layer.setLabeling(_species_count_labels())
+        layer.setLabelsEnabled(True)
     layer.setMetadata(_metadata(layer.name(), source, params, result))
     return layer
 
@@ -285,6 +366,22 @@ def _symbol(color, size, outline="#ffffff", opacity=255):
         {"name": "circle", "color": f"{fill.red()},{fill.green()},{fill.blue()},{fill.alpha()}",
          "size": str(size), "outline_color": outline, "outline_width": "0.4"}
     )
+
+
+def _species_count_labels():
+    """The number of species in white on the point, for places with at least two species."""
+    label = QgsPalLayerSettings()
+    label.fieldName = 'if("n_species" > 1, to_string("n_species"), \'\')'
+    label.isExpression = True
+    label.placement = Qgis.LabelPlacement.OverPoint
+    label.quadOffset = Qgis.LabelQuadrantPosition.Over
+    label.dist = 0
+    label.displayAll = True
+    text = QgsTextFormat()
+    text.setSize(8)
+    text.setColor(QColor("white"))
+    label.setFormat(text)
+    return QgsVectorLayerSimpleLabeling(label)
 
 
 def _heat_renderer(radius_mm):
@@ -356,4 +453,5 @@ def _metadata(name, source, params, result):
     meta.setRights(source.metadata().rights() or [provenance.DISCLAIMER])
     meta.setType("dataset")
     meta.setCrs(QgsCoordinateReferenceSystem(CRS))
+    meta.setKeywords({settings.PLACES_KEY: [settings.dumps(params)]})
     return meta

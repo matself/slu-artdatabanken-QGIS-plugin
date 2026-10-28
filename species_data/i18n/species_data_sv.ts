@@ -3,8 +3,52 @@
   <context>
     <name>CooccurrenceTab</name>
     <message>
+      <source>Strict</source>
+      <translation>Strikt</translation>
+    </message>
+    <message>
+      <source>Standard</source>
+      <translation>Standard</translation>
+    </message>
+    <message>
+      <source>Generous</source>
+      <translation>Generös</translation>
+    </message>
+    <message>
       <source>Locality layer</source>
       <translation>Lokallager</translation>
+    </message>
+    <message>
+      <source>Custom (see Advanced)</source>
+      <translation>Egen (se Avancerat)</translation>
+    </message>
+    <message>
+      <source>How close the localities of different species must be to count as one place.</source>
+      <translation>Hur nära lokalerna av olika arter måste ligga för att räknas som en plats.</translation>
+    </message>
+    <message>
+      <source>Place size</source>
+      <translation>Platsstorlek</translation>
+    </message>
+    <message>
+      <source>Points</source>
+      <translation>Punkter</translation>
+    </message>
+    <message>
+      <source>Heat map</source>
+      <translation>Värmekarta</translation>
+    </message>
+    <message>
+      <source>Show as</source>
+      <translation>Visa som</translation>
+    </message>
+    <message>
+      <source>Only current localities (recent records)</source>
+      <translation>Bara aktuella lokaler (nyliga fynd)</translation>
+    </message>
+    <message>
+      <source>Advanced</source>
+      <translation>Avancerat</translation>
     </message>
     <message>
       <source>Localities of different species belong to the same place when their centres are at most this far apart, plus the radii of the two localities.</source>
@@ -23,16 +67,8 @@
       <translation>Största platsradie (m, 0 = ingen gräns)</translation>
     </message>
     <message>
-      <source>Points</source>
-      <translation>Punkter</translation>
-    </message>
-    <message>
-      <source>Heat map</source>
-      <translation>Värmekarta</translation>
-    </message>
-    <message>
-      <source>Show as</source>
-      <translation>Visa som</translation>
+      <source>Count "searched for, not found" as present</source>
+      <translation>Räkna ”eftersökt, ej funnen” som förekommande</translation>
     </message>
     <message>
       <source>Radius of the heat in millimetres on the screen. Places with all species weigh most, places with one species do not count.</source>
@@ -41,14 +77,6 @@
     <message>
       <source>Heat map radius (mm)</source>
       <translation>Värmekartans radie (mm)</translation>
-    </message>
-    <message>
-      <source>Only current localities (recent records)</source>
-      <translation>Bara aktuella lokaler (nyliga fynd)</translation>
-    </message>
-    <message>
-      <source>Count "searched for, not found" as present</source>
-      <translation>Räkna ”eftersökt, ej funnen” som förekommande</translation>
     </message>
     <message>
       <source>Find places with several species</source>
@@ -109,6 +137,18 @@
   <context>
     <name>LocalityTab</name>
     <message>
+      <source>Strict ({m} m)</source>
+      <translation>Strikt ({m} m)</translation>
+    </message>
+    <message>
+      <source>Standard ({m} m)</source>
+      <translation>Standard ({m} m)</translation>
+    </message>
+    <message>
+      <source>Generous ({m} m)</source>
+      <translation>Generös ({m} m)</translation>
+    </message>
+    <message>
       <source>Strong current locality</source>
       <translation>Stark aktuell lokal</translation>
     </message>
@@ -145,16 +185,28 @@
       <translation>Fyndlager</translation>
     </message>
     <message>
+      <source>Custom (see Advanced)</source>
+      <translation>Egen (se Avancerat)</translation>
+    </message>
+    <message>
+      <source>How large a locality may be. Observations closer than this are one locality, and a string of observations wider than this is split up.</source>
+      <translation>Hur stor en lokal får vara. Fynd som ligger närmare än så är en lokal, och en rad av fynd som är bredare än så delas upp.</translation>
+    </message>
+    <message>
+      <source>Locality size</source>
+      <translation>Lokalstorlek</translation>
+    </message>
+    <message>
+      <source>Let the coordinate uncertainty widen the reach of an observation</source>
+      <translation>Låt koordinatnoggrannheten vidga ett fynds räckvidd</translation>
+    </message>
+    <message>
+      <source>Advanced</source>
+      <translation>Avancerat</translation>
+    </message>
+    <message>
       <source>Link distance between exact points (m)</source>
       <translation>Sammanlänkningsavstånd mellan exakta punkter (m)</translation>
-    </message>
-    <message>
-      <source>Add the coordinate uncertainty to the link distance</source>
-      <translation>Lägg till koordinatnoggrannheten på sammanlänkningsavståndet</translation>
-    </message>
-    <message>
-      <source>Leave out observations less precise than (m)</source>
-      <translation>Utelämna fynd som är mindre exakta än (m)</translation>
     </message>
     <message>
       <source>Observations less precise than this join the nearest locality, but never join two localities together.</source>
@@ -171,6 +223,10 @@
     <message>
       <source>Largest locality radius (m, 0 = no limit)</source>
       <translation>Största lokalradie (m, 0 = ingen gräns)</translation>
+    </message>
+    <message>
+      <source>Leave out observations less precise than (m)</source>
+      <translation>Utelämna fynd som är mindre exakta än (m)</translation>
     </message>
     <message>
       <source>Current: last record at most this many years ago</source>
@@ -243,6 +299,17 @@
     <message>
       <source>The locality number could not be written: {why}</source>
       <translation>Lokalnumret kunde inte skrivas: {why}</translation>
+    </message>
+  </context>
+  <context>
+    <name>SettingsWidgets</name>
+    <message>
+      <source>Use</source>
+      <translation>Använd</translation>
+    </message>
+    <message>
+      <source>Settings of an earlier result:</source>
+      <translation>Inställningar från ett tidigare resultat:</translation>
     </message>
   </context>
   <context>

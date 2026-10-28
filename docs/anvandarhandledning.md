@@ -106,23 +106,50 @@ Datum är omräknade till svensk lokal tid. Antal och enhet ligger kvar som text
 
 Sällsynta arter rapporteras ofta flera gånger från samma plats, med olika noggrannhet, så att en lokal ser ut som flera. Fliken **Lokaler** slår ihop sådana fynd till en lokal.
 
+**Så gör du i de flesta fall**
+
 1. Hämta fynd på fliken Hämta, eller öppna en sparad GeoPackage. Lagret måste vara hämtat med pluginet och ha sin metadata kvar: spara med *Exportera > Spara objekt som* och låt *Spara lagrets metadata* vara ikryssad. Annars säger fliken vad som saknas.
-2. Välj lagret och ställ in parametrarna. Två fynd hör ihop när avståndet mellan dem är högst *sammanlänkningsavståndet* plus (om rutan är ikryssad) de två fyndens koordinatnoggrannhet. Kedjor av fynd blir en lokal.
-3. Fynd som är mindre exakta än gränsen utelämnas, och fynd som är vagare än den andra gränsen ansluts bara till närmaste lokal, så att ett vagt fynd inte binder ihop två skilda lokaler.
-4. Är rutan *Skriv lokalnumret till fyndlagret* ikryssad får fyndlagret fältet `locality_id` (läggs till, eller skrivs över om det redan finns), så att du ser vilka fynd som hör till vilken lokal. Fynd som utelämnats får inget nummer. Vill du pröva andra inställningar ändrar du dem och trycker på knappen igen: numren skrivs då över med de nya, och ett nytt lokallager skapas (ta bort det gamla om du inte vill ha kvar det). Numren går bara att jämföra inom en körning. Obs: fältet ändrar lagrets data, också i en sparad GeoPackage.
-5. En rad av fynd, till exempel längs en strand, skulle annars bli en enda lång lokal. Därför delas lokaler som är bredare än *största radien* (standard 100 m, 0 = ingen gräns) upp i flera.
-6. Resultatet blir ett nytt tillfälligt lager med en punkt per lokal och art: antal fynd, antal år, första och sista år, radie och klass (stark eller sporadisk aktuell, historisk, ej återfunnen, osäker).
+2. Välj lagret på fliken Lokaler.
+3. Välj **Lokalstorlek**: *Strikt* (50 m), *Standard* (100 m) eller *Generös* (200 m). Storleken avgör hur nära fynd måste ligga för att bli en lokal, och hur bred en lokal får bli.
+4. Tryck på **Gruppera till lokaler**.
+
+Resultatet blir ett nytt tillfälligt lager med en punkt per lokal och art: antal fynd, antal år, första och sista år, radie och klass (stark eller sporadisk aktuell, historisk, ej återfunnen, osäker). Punkterna är större ju fler fynd lokalen har.
+
+**Vad storleken ställer in**
+Två fynd hör ihop när avståndet mellan dem är högst storleken plus (om rutan *Låt koordinatnoggrannheten vidga…* är ikryssad) de två fyndens koordinatnoggrannhet, och kedjor av fynd blir en lokal. En rad av fynd, till exempel längs en strand, delas upp när den blir bredare än storleken. Fynd som är vagare än storleken ansluts bara till närmaste lokal, så att ett vagt fynd inte binder ihop två skilda lokaler.
+
+**Avancerat**
+Under *Avancerat* (hopfälld från början) ställer du in varje värde för sig: sammanlänkningsavstånd, gränsen för vaga fynd, största radie, vilka fynd som är för vaga för att räknas med alls (standard 500 m) och årsgränserna för klasserna. Ändrar du något av de tre första värdena visar *Lokalstorlek* *Egen*.
+
+**Lokalnumret**
+Är rutan *Skriv lokalnumret till fyndlagret* ikryssad får fyndlagret fältet `locality_id` (läggs till, eller skrivs över om det redan finns), så att du ser vilka fynd som hör till vilken lokal. Fynd som utelämnats får inget nummer. Numren går bara att jämföra inom en körning. Obs: fältet ändrar lagrets data, också i en sparad GeoPackage.
+
+**Upprepa och jämföra**
+- Fliken minns inställningarna från senaste körningen.
+- Varje resultat har sina inställningar i lagrets metadata, både som text (*Lageregenskaper > Metadata*) och som maskinläsbar JSON. Finns det ett sådant lager i projektet visas raden *Inställningar från ett tidigare resultat*: välj lagret och tryck på *Använd* för att köra om med exakt samma inställningar.
+- Samma indata och samma inställningar ger samma lokaler, oavsett i vilken ordning fynden ligger i lagret. Klasserna räknas mot innevarande år.
+- Vill du jämföra två inställningar behåller du de två lokallagren. Numren i `locality_id` på fyndlagret gäller bara den senaste körningen.
 
 ## Samvariation (fliken Samvariation)
 
 Fliken hittar platser där flera arter har rapporterats från samma plats, till exempel arter som brukar växa i samma miljö. Arterna behöver inte ha rapporterats samtidigt: fynden kan vara från olika år. Vill du bara ha platser med nyliga fynd kryssar du i *Bara aktuella lokaler*.
 
+**Så gör du i de flesta fall**
+
 1. Börja på fliken Lokaler: gruppera fynd av flera arter till lokaler. Varje art får då sina egna lokaler i ett lokallager.
 2. På fliken Samvariation väljer du lokallagret och kryssar i de arter som ska ha rapporterats från samma plats (minst två).
-3. Två lokaler av olika arter hör till samma plats när avståndet mellan deras mittpunkter är högst *största avstånd* plus de två lokalernas radier. Platser som blir bredare än *största platsradie* delas upp, så att en rad av lokaler längs en strand inte blir en enda plats.
-4. *Bara aktuella lokaler* tar bort lokaler utan nyliga fynd. Lokaler där arten bara är eftersökt men inte funnen räknas inte som förekommande, om du inte kryssar i rutan för det.
-5. Resultatet blir ett nytt tillfälligt lager med en punkt per plats: `species` (arterna som finns där), `n_species`, `all_species` (sant när alla valda arter finns), antal lokaler, första och sista år, radie och en kolumn per art. Platsens mittpunkt viktas efter antal fynd, och radien är avståndet som rymmer 90 % av fynden, så enstaka lokaler i utkanten drar inte ut den med antal lokaler. Platser med alla valda arter är röda och ritas överst, platser med flera arter är blå (mörkare ju fler) och platser med bara en art är små och grå. Varje grupp är en egen regel i teckenförklaringen som du kan kryssa ur, till exempel de grå för att bara se samvariation.
-6. *Visa som: Värmekarta* ritar i stället samvariationen som en värmekarta. Platser med en art väger noll, platser med flera arter väger antalet arter minus ett, och platser med alla arter väger ett till. Bara samvariation lyser alltså upp. Radien ställs in i millimeter på skärmen. Värmekartan visar alltså platser där ett urval arter har rapporterats från samma plats, inte nödvändigtvis samtidigt.
+3. Välj **Platsstorlek**: *Strikt*, *Standard* eller *Generös*. Den bestämmer hur nära lokalerna av olika arter måste ligga för att höra till samma plats.
+4. Välj **Visa som**: *Punkter* eller *Värmekarta*. Tryck på **Hitta platser med flera arter**.
+
+**Resultatet** är ett nytt tillfälligt lager med en punkt per plats: `species` (arterna som finns där), `n_species`, `all_species` (sant när alla valda arter finns), antal lokaler, första och sista år, radie och en kolumn per art med antal lokaler. Platsens mittpunkt viktas efter antal fynd, och radien är avståndet som rymmer 90 % av fynden, så enstaka lokaler i utkanten drar inte ut den.
+
+- **Punkter:** platser med alla valda arter är röda och ritas överst, platser med flera arter är blå (mörkare ju fler) och platser med bara en art är små och grå. Siffran på punkten är antalet arter. Varje grupp är en egen regel i teckenförklaringen som du kan kryssa ur, till exempel de grå för att bara se samvariation.
+- **Värmekarta:** platser med en art väger noll, platser med flera arter väger antalet arter minus ett, och platser med alla arter väger ett till. Bara samvariation lyser alltså upp. Radien ställs in i millimeter på skärmen (under *Avancerat*). Värmekartan visar alltså platser där ett urval arter har rapporterats från samma plats, inte nödvändigtvis samtidigt.
+
+**Avancerat**
+Under *Avancerat* ställer du in största avstånd mellan lokaler, största platsradie, om "eftersökt, ej funnen" ska räknas som förekommande (standard nej) och värmekartans radie. Ändrar du avstånden visar *Platsstorlek* *Egen*.
+
+**Upprepa:** som på fliken Lokaler minns fliken senaste inställningarna, och varje resultat bär sina inställningar (text och JSON) i metadatan. Raden *Inställningar från ett tidigare resultat* låter dig köra om med exakt samma inställningar.
 
 **Tolkningen är din.** Resultatet beror på två urval: sökningen (område, period, förekomst, källa och så vidare) och lokalbildningen (avstånd, radier och gränser). Båda står i lagrets metadata under *Lageregenskaper > Metadata*, så att du kan se vad resultatet bygger på. Ändrar du något av dem ändras också platserna.
 

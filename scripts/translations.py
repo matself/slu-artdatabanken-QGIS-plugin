@@ -20,7 +20,8 @@ QM = I18N / "species_data_sv.qm"
 CONTEXTS = {"dockwidget.py": "SpeciesDataDockWidget", "plugin.py": "SpeciesDataPlugin",
             "locality_tab.py": "LocalityTab",
             "layers.py": "Layers",
-            "cooccurrence_tab.py": "CooccurrenceTab"}
+            "cooccurrence_tab.py": "CooccurrenceTab",
+            "settings_widgets.py": "SettingsWidgets"}
 
 MAGIC = bytes.fromhex("3cb86418caef9c95cd211cbf60a1bddd")
 

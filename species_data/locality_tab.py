@@ -27,11 +27,12 @@ from qgis.core import (
     QgsTask,
     QgsVectorLayer,
 )
-from qgis.gui import QgsMapLayerComboBox
+from qgis.gui import QgsCollapsibleGroupBox, QgsMapLayerComboBox
 from qgis.PyQt.QtCore import QCoreApplication, QMetaType
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QFormLayout,
     QLabel,
     QMessageBox,
@@ -42,7 +43,8 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from . import clustering, provenance, source_check
+from . import clustering, provenance, settings, source_check
+from .settings_widgets import StoredSettingsRow, remember, remembered
 from .wfs import CRS
 
 CATEGORY_COLORS = {
@@ -61,6 +63,13 @@ def tr_noop(text):
     """Mark a string for translation without translating it yet (see scripts/translations.py)."""
     return text
 
+
+# The locality sizes of the standard settings, translated where they are shown.
+SIZE_LABELS = {
+    "strict": tr_noop("Strict ({m} m)"),
+    "standard": tr_noop("Standard ({m} m)"),
+    "generous": tr_noop("Generous ({m} m)"),
+}
 
 # Shown in the layer legend and attribute table. Translated where they are displayed.
 CATEGORY_LABELS = {
@@ -117,36 +126,56 @@ class LocalityTab(QWidget):
         self.layer_box.setAllowEmptyLayer(True)
         form.addRow(tr("Observation layer"), self.layer_box)
 
-        self.link_distance = self._spin(0, 5000, 100)
-        form.addRow(tr("Link distance between exact points (m)"), self.link_distance)
-        self.use_uncertainty = QCheckBox(tr("Add the coordinate uncertainty to the link distance"))
+        # The size of a locality is the one thing most users need to choose.
+        self.size_box = QComboBox()
+        for name, size in settings.SIZE_PRESETS:
+            self.size_box.addItem(tr(SIZE_LABELS[name]).format(m=size), name)
+        self.size_box.addItem(tr("Custom (see Advanced)"), settings.CUSTOM)
+        self.size_box.setToolTip(
+            tr(
+                "How large a locality may be. Observations closer than this are one locality, and "
+                "a string of observations wider than this is split up."
+            )
+        )
+        form.addRow(tr("Locality size"), self.size_box)
+        self.use_uncertainty = QCheckBox(tr("Let the coordinate uncertainty widen the reach of an observation"))
         self.use_uncertainty.setChecked(True)
         form.addRow(self.use_uncertainty)
-        self.max_uncertainty = self._spin(1, 100000, 500)
-        form.addRow(tr("Leave out observations less precise than (m)"), self.max_uncertainty)
-        self.bridge_uncertainty = self._spin(0, 100000, 100)
+        layout.addLayout(form)
+
+        # Everything else, with the values of the standard size, is under Advanced.
+        advanced = QgsCollapsibleGroupBox(tr("Advanced"))
+        advanced.setCollapsed(True)
+        more = QFormLayout(advanced)
+        defaults = clustering.Params()
+        self.link_distance = self._spin(0, 5000, int(defaults.link_distance))
+        more.addRow(tr("Link distance between exact points (m)"), self.link_distance)
+        self.bridge_uncertainty = self._spin(0, 100000, int(defaults.bridge_uncertainty))
         self.bridge_uncertainty.setToolTip(
             tr(
                 "Observations less precise than this join the nearest locality, but never "
                 "join two localities together."
             )
         )
-        form.addRow(tr("Vague observations only join one locality above (m)"), self.bridge_uncertainty)
-        self.max_radius = self._spin(0, 100000, int(clustering.Params().max_radius))
+        more.addRow(tr("Vague observations only join one locality above (m)"), self.bridge_uncertainty)
+        self.max_radius = self._spin(0, 100000, int(defaults.max_radius))
         self.max_radius.setToolTip(
             tr(
                 "A string of observations, for example along a shore, is split up when it is "
                 "wider than this. 0 means no limit."
             )
         )
-        form.addRow(tr("Largest locality radius (m, 0 = no limit)"), self.max_radius)
-        self.recent_years = self._spin(0, 100, 5)
-        form.addRow(tr("Current: last record at most this many years ago"), self.recent_years)
-        self.historical_years = self._spin(1, 200, 15)
-        form.addRow(tr("Historical: last record more than this many years ago"), self.historical_years)
-        self.strong_years = self._spin(1, 100, 5)
-        form.addRow(tr("Strong: years with records needed"), self.strong_years)
-        layout.addLayout(form)
+        more.addRow(tr("Largest locality radius (m, 0 = no limit)"), self.max_radius)
+        self.max_uncertainty = self._spin(1, 100000, int(defaults.max_uncertainty))
+        more.addRow(tr("Leave out observations less precise than (m)"), self.max_uncertainty)
+        self.recent_years = self._spin(0, 100, defaults.recent_years)
+        more.addRow(tr("Current: last record at most this many years ago"), self.recent_years)
+        self.historical_years = self._spin(1, 200, defaults.historical_years)
+        more.addRow(tr("Historical: last record more than this many years ago"), self.historical_years)
+        self.strong_years = self._spin(1, 100, defaults.strong_min_years)
+        more.addRow(tr("Strong: years with records needed"), self.strong_years)
+        layout.addWidget(advanced)
+
         self.write_ids = QCheckBox(
             tr("Write the locality number to the observation layer (field locality_id)")
         )
@@ -159,6 +188,8 @@ class LocalityTab(QWidget):
             )
         )
         layout.addWidget(self.write_ids)
+        self.stored = StoredSettingsRow(settings.LOCALITIES_KEY, clustering.Params, self.apply)
+        layout.addWidget(self.stored)
 
         self.status = QLabel("")
         self.status.setWordWrap(True)
@@ -171,8 +202,59 @@ class LocalityTab(QWidget):
         layout.addWidget(self.run_button)
         layout.addStretch()
 
+        # The size choice and the three distances it sets follow each other.
+        self.size_box.currentIndexChanged.connect(self._size_chosen)
+        for box in (self.link_distance, self.bridge_uncertainty, self.max_radius):
+            box.valueChanged.connect(self._size_from_values)
+        remembered_params = remembered("localities", clustering.Params)
+        if remembered_params:
+            self.apply(remembered_params)
+        else:
+            self._size_from_values()
         self.layer_box.layerChanged.connect(self._layer_changed)
         self._layer_changed(self.layer_box.currentLayer())
+
+    # -- size and settings ---------------------------------------------------------------
+
+    def _size_chosen(self):
+        name = self.size_box.currentData()
+        if name == settings.CUSTOM:
+            return
+        for key, value in settings.locality_values(settings.size_of(name)).items():
+            box = getattr(self, key)
+            box.blockSignals(True)
+            box.setValue(int(value))
+            box.blockSignals(False)
+
+    def _size_from_values(self, *_):
+        name = settings.preset_name(
+            {
+                "link_distance": self.link_distance.value(),
+                "bridge_uncertainty": self.bridge_uncertainty.value(),
+                "max_radius": self.max_radius.value(),
+            },
+            settings.locality_values,
+        )
+        self.size_box.blockSignals(True)
+        self.size_box.setCurrentIndex(self.size_box.findData(name))
+        self.size_box.blockSignals(False)
+
+    def apply(self, params: clustering.Params):
+        """Put the values of ``params`` in the controls. The reference year is always the current one."""
+        self.use_uncertainty.setChecked(params.uncertainty_weight > 0)
+        for key, box in (
+            ("link_distance", self.link_distance),
+            ("bridge_uncertainty", self.bridge_uncertainty),
+            ("max_radius", self.max_radius),
+            ("max_uncertainty", self.max_uncertainty),
+            ("recent_years", self.recent_years),
+            ("historical_years", self.historical_years),
+            ("strong_min_years", self.strong_years),
+        ):
+            box.blockSignals(True)
+            box.setValue(int(getattr(params, key)))
+            box.blockSignals(False)
+        self._size_from_values()
 
     @staticmethod
     def _spin(low, high, value):
@@ -262,6 +344,7 @@ class LocalityTab(QWidget):
         self.progress.setVisible(True)
         self.status.setText(tr("Grouping observations into localities..."))
         self._params_used = params
+        remember("localities", params)
         self._task = ClusterTask(self._points, params, self._done)
         self._task.progressChanged.connect(lambda value: self.progress.setValue(int(value)))
         self._task.taskTerminated.connect(self._finished)
@@ -443,4 +526,5 @@ def _metadata(name, source, params):
     meta.setRights(source.metadata().rights() or [provenance.DISCLAIMER])
     meta.setType("dataset")
     meta.setCrs(QgsCoordinateReferenceSystem(CRS))
+    meta.setKeywords({settings.LOCALITIES_KEY: [settings.dumps(params)]})
     return meta
