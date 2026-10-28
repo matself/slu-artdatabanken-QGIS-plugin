@@ -8,23 +8,22 @@ from datetime import datetime
 
 from qgis.core import (
     Qgis,
-    QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsFeature,
+    QgsFeatureRequest,
     QgsField,
     QgsGeometry,
     QgsLayerMetadata,
     QgsMarkerSymbol,
     QgsPointXY,
     QgsProject,
-    QgsProperty,
-    QgsRendererCategory,
-    QgsSymbolLayer,
+    QgsRuleBasedRenderer,
     QgsVectorLayer,
 )
 from qgis.gui import QgsMapLayerComboBox
 from qgis.PyQt.QtCore import QCoreApplication, QMetaType, Qt
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QFormLayout,
@@ -53,8 +52,9 @@ REQUIRED_FIELDS = (
     "last_year",
 )
 # One colour per number of species, light to dark, so more species is always darker.
-RICHNESS_COLORS = {1: "#c6dbef", 2: "#6baed6", 3: "#2171b5", 4: "#08306b"}
-ALL_SPECIES_OUTLINE = "#e31a1c"
+RICHNESS_COLORS = {2: "#6baed6", 3: "#2171b5", 4: "#08306b"}
+ALL_SPECIES_COLOR = "#e31a1c"
+SINGLE_COLOR = "#9e9e9e"
 
 
 def tr(text):
@@ -250,21 +250,38 @@ def build_layer(result, source, params):
     return layer
 
 
+def _symbol(color, size, outline="#ffffff", opacity=255):
+    fill = QColor(color)
+    fill.setAlpha(opacity)
+    return QgsMarkerSymbol.createSimple(
+        {"name": "circle", "color": f"{fill.red()},{fill.green()},{fill.blue()},{fill.alpha()}",
+         "size": str(size), "outline_color": outline, "outline_width": "0.4"}
+    )
+
+
 def _renderer(n_species):
-    categories = []
-    for n in range(1, max(n_species, 2) + 1):
+    """Places with every chosen species stand out in red, places with several in blue (darker
+    with more species), and places with a single species are small and grey, since there are
+    far more of them and they say nothing about co-occurrence. Rules, so each can be switched
+    off in the legend. More species are drawn on top."""
+    rule = QgsRuleBasedRenderer.Rule
+    root = rule(None)
+    root.appendChild(
+        rule(_symbol(ALL_SPECIES_COLOR, 7, "#7f0000"), 0, 0, '"all_species"',
+             tr("All {k} species").format(k=n_species))
+    )
+    for n in range(n_species - 1, 1, -1):
         color = RICHNESS_COLORS[min(n, max(RICHNESS_COLORS))]
-        symbol = QgsMarkerSymbol.createSimple(
-            {"name": "circle", "color": color, "size": str(3 + 1.5 * n), "outline_color": "#ffffff", "outline_width": "0.5"}
+        root.appendChild(
+            rule(_symbol(color, 3.5 + n), 0, 0, f'"n_species" = {n} and not "all_species"',
+                 tr("{n} species").format(n=n))
         )
-        # Places with every chosen species get a red outline.
-        symbol.symbolLayer(0).setDataDefinedProperty(
-            QgsSymbolLayer.Property.StrokeColor,
-            QgsProperty.fromExpression(f"if(\"all_species\", '{ALL_SPECIES_OUTLINE}', '#ffffff')"),
-        )
-        label = tr("{n} species").format(n=n) if n > 1 else tr("1 species")
-        categories.append(QgsRendererCategory(n, symbol, label))
-    return QgsCategorizedSymbolRenderer("n_species", categories)
+    root.appendChild(rule(_symbol(SINGLE_COLOR, 2.5, "#ffffff", 160), 0, 0, "ELSE", tr("1 species")))
+    renderer = QgsRuleBasedRenderer(root)
+    order = QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause('"n_species"', True)])
+    renderer.setOrderBy(order)
+    renderer.setOrderByEnabled(True)
+    return renderer
 
 
 def _metadata(name, source, params, result):

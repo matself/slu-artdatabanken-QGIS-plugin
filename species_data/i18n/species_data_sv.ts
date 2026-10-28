@@ -71,6 +71,10 @@
       <translation>{n} platser, {m} med alla {k} arterna.</translation>
     </message>
     <message>
+      <source>All {k} species</source>
+      <translation>Alla {k} arter</translation>
+    </message>
+    <message>
       <source>{n} species</source>
       <translation>{n} arter</translation>
     </message>
