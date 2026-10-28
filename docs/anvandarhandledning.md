@@ -113,6 +113,16 @@ Sällsynta arter rapporteras ofta flera gånger från samma plats, med olika nog
 5. En rad av fynd, till exempel längs en strand, skulle annars bli en enda lång lokal. Därför delas lokaler som är bredare än *största radien* (standard 100 m, 0 = ingen gräns) upp i flera.
 6. Resultatet blir ett nytt tillfälligt lager med en punkt per lokal och art: antal fynd, antal år, första och sista år, radie och klass (stark eller sporadisk aktuell, historisk, ej återfunnen, osäker).
 
+## Samvariation (fliken Samvariation)
+
+Fliken hittar platser där flera arter förekommer tillsammans, till exempel arter som brukar växa i samma miljö.
+
+1. Börja på fliken Lokaler: gruppera fynd av flera arter till lokaler. Varje art får då sina egna lokaler i ett lokallager.
+2. På fliken Samvariation väljer du lokallagret och kryssar i de arter du vill leta efter tillsammans (minst två).
+3. Två lokaler av olika arter hör till samma plats när avståndet mellan deras mittpunkter är högst *största avstånd* plus de två lokalernas radier. Platser som blir bredare än *största platsradie* delas upp, så att en rad av lokaler längs en strand inte blir en enda plats.
+4. *Bara aktuella lokaler* tar bort lokaler utan nyliga fynd. Lokaler där arten bara är eftersökt men inte funnen räknas inte som förekommande, om du inte kryssar i rutan för det.
+5. Resultatet blir ett nytt tillfälligt lager med en punkt per plats: `species` (arterna som finns där), `n_species`, `all_species` (sant när alla valda arter finns), antal lokaler, första och sista år, radie och en kolumn per art med antal lokaler. Punkterna är blå och mörkare ju fler arter; platser med alla arter har röd kant.
+
 ## 6. Data, villkor och personuppgifter
 
 - Källan är SLU Artdatabankens öppna WFS-tjänst för Artportalens fynd. Pluginet visar källan i panelen, i meddelandet efter hämtning och i lagrets metadata. Villkoren finns här: <https://www.slu.se/artdatabanken/rapportering-och-fynd/oppna-data-och-apier/api-villkor/>

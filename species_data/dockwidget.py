@@ -3,7 +3,8 @@
 Code-only (no .ui file, so no uic differences between Qt5 and Qt6). The "Fetch" tab
 has five sections that follow the structure of SLU Artdatabanken's own search page, Fynddata,
 and share one scrolling window above the fixed count and create buttons. The
-"Localities" tab (``locality_tab.py``) groups the observations of a fetched layer.
+"Localities" tab (``locality_tab.py``) groups the observations of a fetched layer and the
+"Co-occurrence" tab (``cooccurrence_tab.py``) finds places where several species occur together.
 """
 from datetime import date, datetime
 
@@ -38,6 +39,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from . import layers, provenance, snapshot
+from .cooccurrence_tab import CooccurrenceTab
 from .download import CountTask, SnapshotTask
 from .locality_tab import LocalityTab
 from .query import (
@@ -147,6 +149,7 @@ class SpeciesDataDockWidget(QDockWidget):
         tabs = QTabWidget()
         tabs.addTab(content, tr("Fetch"))
         tabs.addTab(LocalityTab(iface), tr("Localities"))
+        tabs.addTab(CooccurrenceTab(iface), tr("Co-occurrence"))
         self.setWidget(tabs)
         iface.mapCanvas().extentsChanged.connect(self._map_moved)
         self._clear_count()

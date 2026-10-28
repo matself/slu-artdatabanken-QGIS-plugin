@@ -1,6 +1,81 @@
 <?xml version='1.0' encoding='utf-8'?>
 <TS version="2.1" language="sv_SE">
   <context>
+    <name>CooccurrenceTab</name>
+    <message>
+      <source>Locality layer</source>
+      <translation>Lokallager</translation>
+    </message>
+    <message>
+      <source>Localities of different species belong to the same place when their centres are at most this far apart, plus the radii of the two localities.</source>
+      <translation>Lokaler av olika arter hör till samma plats när deras mittpunkter ligger högst så långt ifrån varandra, plus de två lokalernas radier.</translation>
+    </message>
+    <message>
+      <source>Largest gap between localities (m)</source>
+      <translation>Största avstånd mellan lokaler (m)</translation>
+    </message>
+    <message>
+      <source>A place wider than this is split up. 0 means no limit.</source>
+      <translation>En plats som är bredare än så delas upp. 0 betyder ingen gräns.</translation>
+    </message>
+    <message>
+      <source>Largest place radius (m, 0 = no limit)</source>
+      <translation>Största platsradie (m, 0 = ingen gräns)</translation>
+    </message>
+    <message>
+      <source>Only current localities (recent records)</source>
+      <translation>Bara aktuella lokaler (nyliga fynd)</translation>
+    </message>
+    <message>
+      <source>Count "searched for, not found" as present</source>
+      <translation>Räkna ”eftersökt, ej funnen” som förekommande</translation>
+    </message>
+    <message>
+      <source>Find places with several species</source>
+      <translation>Hitta platser med flera arter</translation>
+    </message>
+    <message>
+      <source>Choose the locality layer made on the Localities tab.</source>
+      <translation>Välj lokallagret som gjorts på fliken Lokaler.</translation>
+    </message>
+    <message>
+      <source>The layer has no localities.</source>
+      <translation>Lagret har inga lokaler.</translation>
+    </message>
+    <message>
+      <source>Co-occurrence needs at least two species. Tick two or more in the list.</source>
+      <translation>Samvariation kräver minst två arter. Kryssa i två eller fler i listan.</translation>
+    </message>
+    <message>
+      <source>Species Data</source>
+      <translation>Artdata</translation>
+    </message>
+    <message>
+      <source>1 species</source>
+      <translation>1 art</translation>
+    </message>
+    <message>
+      <source>Species to look for together:</source>
+      <translation>Arter att leta efter tillsammans:</translation>
+    </message>
+    <message>
+      <source>No places found.</source>
+      <translation>Inga platser hittades.</translation>
+    </message>
+    <message>
+      <source>This is not a locality layer from the Localities tab. Missing fields: {fields}.</source>
+      <translation>Det här är inte ett lokallager från fliken Lokaler. Fält som saknas: {fields}.</translation>
+    </message>
+    <message>
+      <source>{n} places, {m} with all {k} species.</source>
+      <translation>{n} platser, {m} med alla {k} arterna.</translation>
+    </message>
+    <message>
+      <source>{n} species</source>
+      <translation>{n} arter</translation>
+    </message>
+  </context>
+  <context>
     <name>Layers</name>
     <message>
       <source>Uncertainty</source>
@@ -191,6 +266,10 @@
     <message>
       <source>Localities</source>
       <translation>Lokaler</translation>
+    </message>
+    <message>
+      <source>Co-occurrence</source>
+      <translation>Samvariation</translation>
     </message>
     <message>
       <source>Enter at least one species or genus name, or tick All species.</source>
