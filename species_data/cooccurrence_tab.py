@@ -12,6 +12,9 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsFeature,
     QgsFeatureRequest,
+    QgsGradientColorRamp,
+    QgsGradientStop,
+    QgsHeatmapRenderer,
     QgsField,
     QgsGeometry,
     QgsLayerMetadata,
@@ -26,6 +29,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QMetaType, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QFormLayout,
     QLabel,
     QListWidget,
@@ -55,6 +59,11 @@ REQUIRED_FIELDS = (
 RICHNESS_COLORS = {2: "#6baed6", 3: "#2171b5", 4: "#08306b"}
 ALL_SPECIES_COLOR = "#e31a1c"
 SINGLE_COLOR = "#9e9e9e"
+POINTS, HEAT = "points", "heat"
+HEAT_RADIUS_MM = 10
+# Places with one species weigh nothing, several species weigh n - 1, and every chosen species
+# together weighs one more, so only co-occurrence lights up the map.
+HEAT_WEIGHT = '"n_species" - 1 + if("all_species", 1, 0)'
 
 
 def tr(text):
@@ -94,6 +103,22 @@ class CooccurrenceTab(QWidget):
         self.max_radius.setToolTip(tr("A place wider than this is split up. 0 means no limit."))
         params.addRow(tr("Largest place radius (m, 0 = no limit)"), self.max_radius)
         layout.addLayout(params)
+        look = QFormLayout()
+        self.style_box = QComboBox()
+        self.style_box.addItem(tr("Points"), POINTS)
+        self.style_box.addItem(tr("Heat map"), HEAT)
+        look.addRow(tr("Show as"), self.style_box)
+        self.heat_radius = self._spin(1, 100, HEAT_RADIUS_MM)
+        self.heat_radius.setToolTip(
+            tr("Radius of the heat in millimetres on the screen. Places with all species weigh most, "
+               "places with one species do not count.")
+        )
+        look.addRow(tr("Heat map radius (mm)"), self.heat_radius)
+        self.style_box.currentIndexChanged.connect(
+            lambda: self.heat_radius.setEnabled(self.style_box.currentData() == HEAT)
+        )
+        self.heat_radius.setEnabled(False)
+        layout.addLayout(look)
         self.only_current = QCheckBox(tr("Only current localities (recent records)"))
         self.count_not_refound = QCheckBox(tr('Count "searched for, not found" as present'))
         layout.addWidget(self.only_current)
@@ -204,7 +229,7 @@ class CooccurrenceTab(QWidget):
         if not result.places:
             QMessageBox.information(self, tr("Species Data"), tr("No places found."))
             return
-        out = build_layer(result, layer, params)
+        out = build_layer(result, layer, params, self.style_box.currentData(), self.heat_radius.value())
         QgsProject.instance().addMapLayer(out)
         together = sum(1 for p in result.places if p.all_species)
         self.status.setText(
@@ -217,7 +242,7 @@ def _year(value):
     return int(value) if isinstance(value, (int, float)) else None
 
 
-def build_layer(result, source, params):
+def build_layer(result, source, params, style=None, heat_radius_mm=None):
     """A temporary layer with one point per place."""
     layer = QgsVectorLayer(f"Point?crs={CRS}", f"{source.name()}: co-occurrence", "memory")
     species_columns = [column_name(s) for s in result.wanted]
@@ -245,7 +270,10 @@ def build_layer(result, source, params):
         )
         features.append(feature)
     layer.dataProvider().addFeatures(features)
-    layer.setRenderer(_renderer(len(result.wanted)))
+    if style == HEAT:
+        layer.setRenderer(_heat_renderer(heat_radius_mm or HEAT_RADIUS_MM))
+    else:
+        layer.setRenderer(_renderer(len(result.wanted)))
     layer.setMetadata(_metadata(layer.name(), source, params, result))
     return layer
 
@@ -257,6 +285,27 @@ def _symbol(color, size, outline="#ffffff", opacity=255):
         {"name": "circle", "color": f"{fill.red()},{fill.green()},{fill.blue()},{fill.alpha()}",
          "size": str(size), "outline_color": outline, "outline_width": "0.4"}
     )
+
+
+def _heat_renderer(radius_mm):
+    """A heat map of co-occurrence, from transparent through yellow and orange to dark red."""
+    renderer = QgsHeatmapRenderer()
+    renderer.setWeightExpression(HEAT_WEIGHT)
+    renderer.setRadius(radius_mm)
+    renderer.setRadiusUnit(Qgis.RenderUnit.Millimeters)
+    renderer.setColorRamp(
+        QgsGradientColorRamp(
+            QColor(255, 255, 204, 0),
+            QColor(128, 0, 38),
+            False,
+            [
+                QgsGradientStop(0.25, QColor(254, 217, 118)),
+                QgsGradientStop(0.5, QColor(253, 141, 60)),
+                QgsGradientStop(0.75, QColor(227, 26, 28)),
+            ],
+        )
+    )
+    return renderer
 
 
 def _renderer(n_species):

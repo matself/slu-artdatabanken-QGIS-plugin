@@ -23,6 +23,26 @@
       <translation>Största platsradie (m, 0 = ingen gräns)</translation>
     </message>
     <message>
+      <source>Points</source>
+      <translation>Punkter</translation>
+    </message>
+    <message>
+      <source>Heat map</source>
+      <translation>Värmekarta</translation>
+    </message>
+    <message>
+      <source>Show as</source>
+      <translation>Visa som</translation>
+    </message>
+    <message>
+      <source>Radius of the heat in millimetres on the screen. Places with all species weigh most, places with one species do not count.</source>
+      <translation>Värmens radie i millimeter på skärmen. Platser med alla arter väger mest, och platser med en art räknas inte.</translation>
+    </message>
+    <message>
+      <source>Heat map radius (mm)</source>
+      <translation>Värmekartans radie (mm)</translation>
+    </message>
+    <message>
       <source>Only current localities (recent records)</source>
       <translation>Bara aktuella lokaler (nyliga fynd)</translation>
     </message>
