@@ -59,9 +59,9 @@ Ej beslutat (se avsnitt 9): primärt arbetsflöde (art, plats eller jämförelse
 1. Hur långa `dyntaxaTaxonId IN (...)`-listor WFS-servern klarar (släkten kan ha hundratals taxa).
 2. Om WFS 1.0.0 stöder `resultType=hits` för snabb räkning utan nyckel. Annars används REST `Count`.
 3. Koordinatsystem och geometri i REST-GeoJSON (`GeoJson`/`GeoJsonFlat`): WGS84 eller SWEREF 99 TM, och om `coordinateUncertaintyInMeters` följer med i minimala fältuppsättningen.
-4. Verkligt `take`-tak: specen säger 1000, Artdatabankens sida säger 10 000 per sökning.
-5. Om samma nyckel gäller för SOS och Taxonomy eller om två prenumerationer behövs, samt eventuella rate limits.
-6. Om API-villkoren även omfattar WFS-tjänsten.
+4. ~~Verkligt `take`-tak~~ Besvarat av SLU 2026-10-26: 1000 per anrop, paginering till 10 000; använd `Observations_ObservationsByCursor` (upp till 2 miljoner) med egen gräns 100 000 och kontroll av `TotalCount`. Se `docs/findings.md`.
+5. ~~Nyckel och rate limits~~ Besvarat: samma nyckel/produkt för flera API:er; max 60 anrop/min och 1 GB/timme per nyckel. REST-klienten måste throttla.
+6. ~~Omfattas WFS av villkoren?~~ Besvarat: i praktiken samma villkor; SLU ser anonyma anrop som ett problem.
 7. Om QGIS OAuth2-autentisering klarar flödet med PKCE och eget client ID (endast relevant för fas 4).
 8. Hur QGIS WFS-provider hanterar `filter`, `pagesize`, `version=1.0.0` och `restrictToRequestBBOX` när lagret skapas programmatiskt.
 9. Om `url`-fältet och `recordedBy` alltid är ifyllda i WFS (påverkar åtgärder och personuppgiftshantering).

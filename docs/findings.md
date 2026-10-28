@@ -18,13 +18,19 @@ Working alternative: probe with `startIndex=N&maxFeatures=1` and check whether a
 Open. Needs an API key.
 
 ## 4. Real `take` cap
-Open. Needs an API key.
+**Answered by SLU (Martin Käck, 2026-10-26):** `take` max is 1000 on `Observations/Search`, with paging up to 10 000 observations. SLU recommends `Observations_ObservationsByCursor` instead: it pages up to 2 million and is gentler on the database. SLU asks for a plugin-side limit of **100 000** observations. The result carries `TotalCount`. If it is above 100 000 the plugin must say so and ask the user for a narrower filter or a closer zoom. Usage examples: integration tests `ObservationsByCursorTests.cs` in github.com/biodiversitydata-se/SOS. (Note: the earlier spec reading of `SearchByCursor` take max 2500 is not contradicted; confirm in the API console.)
 
 ## 5. One key for SOS and Taxonomy, rate limits
-Open. Asked in the support mail (question 6).
+**Answered by SLU (2026-10-26):** yes, one key. Both APIs belong to the same Product. Rate limits per API key: max 1 GB per hour and max 60 calls per minute. A REST client must throttle below 60 calls/min.
 
 ## 6. Do the API terms cover WFS?
-Open. Asked in the support mail (question 4).
+**Answered by SLU (2026-10-26):** yes, in practice the same terms. SLU sees anonymous WFS calls as a problem. WFS limits (5000 per request, `numberMatched`) come from shortcomings in the GeoServer Elasticsearch plugin. SLU would like to support larger datasets in WMS/WFS.
+
+## Approval and open points from SLU's reply (2026-10-26)
+- Open source plugin approved. Each user using their own API key is fine (questions 1 and 2: yes, including the name and the independence text).
+- Question 3 (logo, wording of the source): SLU Artdatabanken has a logo, SOS does not. SLU will come back with an answer. Do not use any logo until then.
+- Protected observations need a SLU UserAdmin login and permission. The plugin does not handle them (unchanged decision).
+- This is a mail reply, not yet a formal written approval under 5.3/5.6 of the terms. Ask whether it is enough to publish.
 
 ## 7. QGIS OAuth2 with PKCE
 Not applicable. The plugin will never handle protected observations (decision 2026-10-24).
