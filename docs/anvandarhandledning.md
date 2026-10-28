@@ -115,14 +115,14 @@ Sällsynta arter rapporteras ofta flera gånger från samma plats, med olika nog
 
 ## Samvariation (fliken Samvariation)
 
-Fliken hittar platser där flera arter förekommer tillsammans, till exempel arter som brukar växa i samma miljö.
+Fliken hittar platser där flera arter har rapporterats från samma plats, till exempel arter som brukar växa i samma miljö. Arterna behöver inte ha rapporterats samtidigt: fynden kan vara från olika år. Vill du bara ha platser med nyliga fynd kryssar du i *Bara aktuella lokaler*.
 
 1. Börja på fliken Lokaler: gruppera fynd av flera arter till lokaler. Varje art får då sina egna lokaler i ett lokallager.
-2. På fliken Samvariation väljer du lokallagret och kryssar i de arter du vill leta efter tillsammans (minst två).
+2. På fliken Samvariation väljer du lokallagret och kryssar i de arter som ska ha rapporterats från samma plats (minst två).
 3. Två lokaler av olika arter hör till samma plats när avståndet mellan deras mittpunkter är högst *största avstånd* plus de två lokalernas radier. Platser som blir bredare än *största platsradie* delas upp, så att en rad av lokaler längs en strand inte blir en enda plats.
 4. *Bara aktuella lokaler* tar bort lokaler utan nyliga fynd. Lokaler där arten bara är eftersökt men inte funnen räknas inte som förekommande, om du inte kryssar i rutan för det.
 5. Resultatet blir ett nytt tillfälligt lager med en punkt per plats: `species` (arterna som finns där), `n_species`, `all_species` (sant när alla valda arter finns), antal lokaler, första och sista år, radie och en kolumn per art. Platsens mittpunkt viktas efter antal fynd, och radien är avståndet som rymmer 90 % av fynden, så enstaka lokaler i utkanten drar inte ut den med antal lokaler. Platser med alla valda arter är röda och ritas överst, platser med flera arter är blå (mörkare ju fler) och platser med bara en art är små och grå. Varje grupp är en egen regel i teckenförklaringen som du kan kryssa ur, till exempel de grå för att bara se samvariation.
-6. *Visa som: Värmekarta* ritar i stället samvariationen som en värmekarta. Platser med en art väger noll, platser med flera arter väger antalet arter minus ett, och platser med alla arter väger ett till. Bara samvariation lyser alltså upp. Radien ställs in i millimeter på skärmen. Värmen bygger på rapporterade fynd. Fynden kommer från många olika källor, och platser som besöks och rapporteras oftare, till exempel för att där finns sällsynta arter, kan se ut som hotspots. Värmekartan säger därför inget om varför ett område har många fynd, och den visar inte artens verkliga utbredning.
+6. *Visa som: Värmekarta* ritar i stället samvariationen som en värmekarta. Platser med en art väger noll, platser med flera arter väger antalet arter minus ett, och platser med alla arter väger ett till. Bara samvariation lyser alltså upp. Radien ställs in i millimeter på skärmen. Värmekartan visar alltså platser där ett urval arter har rapporterats från samma plats, inte nödvändigtvis samtidigt.
 
 ## 6. Data, villkor och personuppgifter
 

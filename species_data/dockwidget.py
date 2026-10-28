@@ -4,7 +4,7 @@ Code-only (no .ui file, so no uic differences between Qt5 and Qt6). The "Fetch" 
 has five sections that follow the structure of SLU Artdatabanken's own search page, Fynddata,
 and share one scrolling window above the fixed count and create buttons. The
 "Localities" tab (``locality_tab.py``) groups the observations of a fetched layer and the
-"Co-occurrence" tab (``cooccurrence_tab.py``) finds places where several species occur together.
+"Co-occurrence" tab (``cooccurrence_tab.py``) finds places where several species have been reported from the same place.
 """
 from datetime import date, datetime
 

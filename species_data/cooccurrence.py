@@ -1,4 +1,4 @@
-"""Find the places where several species occur together (no QGIS imports).
+"""Find the places where several species have been reported from the same place (no QGIS imports).
 
 The input is the localities of each species, as made by ``clustering.py``. Localities of
 different species belong to the same place when the distance between their centres is at

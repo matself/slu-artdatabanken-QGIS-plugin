@@ -75,8 +75,8 @@
       <translation>1 art</translation>
     </message>
     <message>
-      <source>Species to look for together:</source>
-      <translation>Arter att leta efter tillsammans:</translation>
+      <source>Species that must be reported from the same place:</source>
+      <translation>Arter som ska ha rapporterats från samma plats:</translation>
     </message>
     <message>
       <source>No places found.</source>

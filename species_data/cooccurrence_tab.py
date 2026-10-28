@@ -1,4 +1,4 @@
-"""The "Co-occurrence" tab: find places where several species occur together.
+"""The "Co-occurrence" tab: find places where several species have been reported from the same place.
 
 It reads a locality layer made by the "Localities" tab (one locality per species) and writes a
 new temporary point layer with one point per place. The grouping is in ``cooccurrence.py``.
@@ -87,7 +87,7 @@ class CooccurrenceTab(QWidget):
         form.addRow(tr("Locality layer"), self.layer_box)
         layout.addLayout(form)
 
-        layout.addWidget(QLabel(tr("Species to look for together:")))
+        layout.addWidget(QLabel(tr("Species that must be reported from the same place:")))
         self.species_list = QListWidget()
         self.species_list.setMaximumHeight(120)
         layout.addWidget(self.species_list)
@@ -341,7 +341,7 @@ def _metadata(name, source, params, result):
             [
                 source.metadata().abstract() or provenance.SOURCE,
                 "",
-                "Places where the species occur together, found with the plugin Species Data "
+                "Places where the species have been reported from the same place (not necessarily at the same time), found with the plugin Species Data "
                 f"(SLU Artdatabanken): species {', '.join(result.wanted)}; localities within "
                 f"{params.max_gap:g} m plus their radii form one place; places wider than a radius of "
                 f"{params.max_radius:g} m are split (0 = no limit); "
