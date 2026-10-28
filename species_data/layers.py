@@ -3,7 +3,6 @@ from datetime import datetime
 
 from qgis.core import (
     Qgis,
-    QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsFeature,
     QgsFeatureRequest,
@@ -15,10 +14,10 @@ from qgis.core import (
     QgsLayerMetadata,
     QgsMarkerSymbol,
     QgsPointXY,
-    QgsRendererCategory,
+    QgsRuleBasedRenderer,
     QgsVectorLayer,
 )
-from qgis.PyQt.QtCore import QDate, QDateTime, QMetaType, Qt, QTimeZone
+from qgis.PyQt.QtCore import QCoreApplication, QDate, QDateTime, QMetaType, Qt, QTimeZone
 from qgis.PyQt.QtGui import QColor
 
 from . import provenance, styles
@@ -32,6 +31,12 @@ _TYPES = {
     "bool": QMetaType.Type.Bool,
     "date": QMetaType.Type.QDate,
 }
+
+
+def tr(text):
+    return QCoreApplication.translate("Layers", text)
+
+
 _STOCKHOLM = QTimeZone(b"Europe/Stockholm")
 
 # Shown when the pointer rests on a point (QGIS map tips) and in the identify results.
@@ -93,53 +98,59 @@ def _convert(value, kind):
     return value
 
 
-# The uncertainty circle is a geometry generator symbol layer under the point, so it is part
-# of the same symbol and follows its colour. The layer is in metres (SWEREF 99 TM). To keep the
-# map readable the circle is only an outline, is drawn when zoomed in to CIRCLE_MAX_SCALE or
-# closer, and is left out for observations less precise than CIRCLE_MAX_METERS. The user can
-# switch the symbol layer off, or change these limits, in the layer styling panel.
+# The uncertainty circle is its own rule in the renderer, so it shows as one entry in the legend
+# and can be switched off there. Every observation gets the same thin, unfilled circle whatever
+# its year. The layer is in metres (SWEREF 99 TM). To keep the map readable the rule is only
+# active when zoomed in to CIRCLE_MAX_SCALE or closer, and leaves out observations less precise
+# than CIRCLE_MAX_METERS. The limits can be changed in the layer styling panel.
 CIRCLE_MAX_METERS = 250
 CIRCLE_MAX_SCALE = 10000
-CIRCLE_EXPRESSION = (
-    f'if(@map_scale <= {CIRCLE_MAX_SCALE} and "coordinateUncertaintyInMeters" > 0 '
-    f'and "coordinateUncertaintyInMeters" <= {CIRCLE_MAX_METERS}, '
-    'buffer($geometry, "coordinateUncertaintyInMeters"), NULL)'
+CIRCLE_COLOR = "#444444"
+CIRCLE_FILTER = (
+    f'"coordinateUncertaintyInMeters" > 0 and "coordinateUncertaintyInMeters" <= {CIRCLE_MAX_METERS}'
 )
 
 
 def _symbol(color):
-    symbol = QgsMarkerSymbol.createSimple(
+    return QgsMarkerSymbol.createSimple(
         {"name": "circle", "color": color.name(), "size": "2.4", "outline_color": "#ffffff",
          "outline_width": "0.25"}
     )
-    symbol.insertSymbolLayer(0, _uncertainty_circle(color))
-    return symbol
 
 
-def _uncertainty_circle(color):
-    generator = QgsGeometryGeneratorSymbolLayer.create({"geometryModifier": CIRCLE_EXPRESSION})
+def _circle_symbol():
+    """A marker symbol whose only layer draws the buffer of the point, as an outline."""
+    symbol = QgsMarkerSymbol.createSimple({"name": "circle", "size": "1"})
+    generator = QgsGeometryGeneratorSymbolLayer.create(
+        {"geometryModifier": 'buffer($geometry, "coordinateUncertaintyInMeters")'}
+    )
     generator.setSymbolType(Qgis.SymbolType.Fill)
     generator.setSubSymbol(
         QgsFillSymbol.createSimple(
-            {"style": "no", "outline_color": color.name(), "outline_width": "0.25"}
+            {"style": "no", "outline_color": CIRCLE_COLOR, "outline_width": "0.2"}
         )
     )
-    return generator
+    symbol.changeSymbolLayer(0, generator)
+    return symbol
 
 
 def _year_renderer(layer):
-    """One colour per year of the end date, newest drawn on top."""
+    """One colour per year of the end date, newest drawn on top, and the uncertainty circle."""
     years = set()
     for feature in layer.getFeatures():
         value = feature["endDate"]
         if isinstance(value, QDate) and value.isValid():
             years.add(value.year())
-    categories = [
-        QgsRendererCategory(year, _symbol(QColor.fromHsvF(*styles.year_color_hsv(year))), str(year))
-        for year in sorted(years)
-    ]
-    categories.append(QgsRendererCategory("", _symbol(QColor(styles.NO_DATE_COLOR)), ""))
-    renderer = QgsCategorizedSymbolRenderer('year("endDate")', categories)
+    rule = QgsRuleBasedRenderer.Rule
+    root = rule(None)
+    root.appendChild(
+        rule(_circle_symbol(), 0, CIRCLE_MAX_SCALE, CIRCLE_FILTER, tr("Uncertainty"))
+    )
+    for year in sorted(years):
+        color = QColor.fromHsvF(*styles.year_color_hsv(year))
+        root.appendChild(rule(_symbol(color), 0, 0, f'year("endDate") = {year}', str(year)))
+    root.appendChild(rule(_symbol(QColor(styles.NO_DATE_COLOR)), 0, 0, "ELSE", ""))
+    renderer = QgsRuleBasedRenderer(root)
     request = QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause('"endDate"', True)])
     renderer.setOrderBy(request)
     renderer.setOrderByEnabled(True)

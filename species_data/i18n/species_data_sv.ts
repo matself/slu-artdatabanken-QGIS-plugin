@@ -1,6 +1,13 @@
 <?xml version='1.0' encoding='utf-8'?>
 <TS version="2.1" language="sv_SE">
   <context>
+    <name>Layers</name>
+    <message>
+      <source>Uncertainty</source>
+      <translation>Osäkerhet</translation>
+    </message>
+  </context>
+  <context>
     <name>LocalityTab</name>
     <message>
       <source>Strong current locality</source>
