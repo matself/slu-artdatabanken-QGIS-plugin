@@ -101,6 +101,15 @@ Läggs till när sökningen kan ge sådana fynd: `isPresentObservation`, `isNotR
 
 Datum är omräknade till svensk lokal tid. Antal och enhet ligger kvar som text, precis som i källan, och är ofta tomma.
 
+## Lokaler (fliken Lokaler)
+
+Sällsynta arter rapporteras ofta flera gånger från samma plats, med olika noggrannhet, så att en lokal ser ut som flera. Fliken **Lokaler** slår ihop sådana fynd till en lokal.
+
+1. Hämta fynd på fliken Hämta, eller öppna en sparad GeoPackage. Lagret måste vara hämtat med pluginet och ha sin metadata kvar: spara med *Exportera > Spara objekt som* och låt *Spara lagrets metadata* vara ikryssad. Annars säger fliken vad som saknas.
+2. Välj lagret och ställ in parametrarna. Två fynd hör ihop när avståndet mellan dem är högst *sammanlänkningsavståndet* plus (om rutan är ikryssad) de två fyndens koordinatnoggrannhet. Kedjor av fynd blir en lokal.
+3. Fynd som är mindre exakta än gränsen utelämnas, och fynd som är vagare än den andra gränsen ansluts bara till närmaste lokal, så att ett vagt fynd inte binder ihop två skilda lokaler.
+4. Resultatet blir ett nytt tillfälligt lager med en punkt per lokal och art: antal fynd, antal år, första och sista år, radie och klass (stark eller sporadisk aktuell, historisk, ej återfunnen, osäker).
+
 ## 6. Data, villkor och personuppgifter
 
 - Källan är SLU Artdatabankens öppna WFS-tjänst för Artportalens fynd. Pluginet visar källan i panelen, i meddelandet efter hämtning och i lagrets metadata. Villkoren finns här: <https://www.slu.se/artdatabanken/rapportering-och-fynd/oppna-data-och-apier/api-villkor/>

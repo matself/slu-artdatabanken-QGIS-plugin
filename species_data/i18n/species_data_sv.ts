@@ -1,6 +1,112 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
+<?xml version='1.0' encoding='utf-8'?>
 <TS version="2.1" language="sv_SE">
+  <context>
+    <name>LocalityTab</name>
+    <message>
+      <source>Strong current locality</source>
+      <translation>Stark aktuell lokal</translation>
+    </message>
+    <message>
+      <source>Sporadic current locality</source>
+      <translation>Sporadisk aktuell lokal</translation>
+    </message>
+    <message>
+      <source>Historical locality (no recent records)</source>
+      <translation>Historisk lokal (inga sentida fynd)</translation>
+    </message>
+    <message>
+      <source>Not refound</source>
+      <translation>Ej återfunnen</translation>
+    </message>
+    <message>
+      <source>Uncertain</source>
+      <translation>Osäker</translation>
+    </message>
+    <message>
+      <source>The layer has no observations.</source>
+      <translation>Lagret har inga fynd.</translation>
+    </message>
+    <message>
+      <source>The layer does not have point geometry.</source>
+      <translation>Lagret har inte punktgeometri.</translation>
+    </message>
+    <message>
+      <source>The layer metadata does not name the data source of this plugin. Save the layer together with its metadata, or fetch the data again.</source>
+      <translation>Lagrets metadata anger inte pluginets datakälla. Spara lagret tillsammans med dess metadata eller hämta data igen.</translation>
+    </message>
+    <message>
+      <source>Observation layer</source>
+      <translation>Fyndlager</translation>
+    </message>
+    <message>
+      <source>Link distance between exact points (m)</source>
+      <translation>Sammanlänkningsavstånd mellan exakta punkter (m)</translation>
+    </message>
+    <message>
+      <source>Add the coordinate uncertainty to the link distance</source>
+      <translation>Lägg till koordinatnoggrannheten på sammanlänkningsavståndet</translation>
+    </message>
+    <message>
+      <source>Leave out observations less precise than (m)</source>
+      <translation>Utelämna fynd som är mindre exakta än (m)</translation>
+    </message>
+    <message>
+      <source>Observations less precise than this join the nearest locality, but never join two localities together.</source>
+      <translation>Fynd som är mindre exakta än så ansluts till närmaste lokal men binder aldrig ihop två lokaler.</translation>
+    </message>
+    <message>
+      <source>Vague observations only join one locality above (m)</source>
+      <translation>Vaga fynd ansluts bara till en lokal över (m)</translation>
+    </message>
+    <message>
+      <source>Current: last record at most this many years ago</source>
+      <translation>Aktuell: senaste fyndet högst så många år sedan</translation>
+    </message>
+    <message>
+      <source>Historical: last record more than this many years ago</source>
+      <translation>Historisk: senaste fyndet för fler år sedan än</translation>
+    </message>
+    <message>
+      <source>Strong: years with records needed</source>
+      <translation>Stark: antal år med fynd som krävs</translation>
+    </message>
+    <message>
+      <source>Group into localities</source>
+      <translation>Gruppera till lokaler</translation>
+    </message>
+    <message>
+      <source>Grouping observations into localities...</source>
+      <translation>Grupperar fynd till lokaler...</translation>
+    </message>
+    <message>
+      <source>Species Data</source>
+      <translation>Artdata</translation>
+    </message>
+    <message>
+      <source>Choose a layer fetched with this plugin.</source>
+      <translation>Välj ett lager som hämtats med pluginet.</translation>
+    </message>
+    <message>
+      <source>(no name)</source>
+      <translation>(namn saknas)</translation>
+    </message>
+    <message>
+      <source>The layer has no usable observations.</source>
+      <translation>Lagret har inga användbara fynd.</translation>
+    </message>
+    <message>
+      <source>{n} localities from {m} observations.</source>
+      <translation>{n} lokaler från {m} fynd.</translation>
+    </message>
+    <message>
+      <source>Missing fields: {fields}.</source>
+      <translation>Fält som saknas: {fields}.</translation>
+    </message>
+    <message>
+      <source>{n} observations were less precise than the limit and left out.</source>
+      <translation>{n} fynd var mindre exakta än gränsen och utelämnades.</translation>
+    </message>
+  </context>
   <context>
     <name>SpeciesDataDockWidget</name>
     <message>
@@ -38,6 +144,14 @@
     <message>
       <source>Fetch and show observations</source>
       <translation>Hämta och visa fynd</translation>
+    </message>
+    <message>
+      <source>Fetch</source>
+      <translation>Hämta</translation>
+    </message>
+    <message>
+      <source>Localities</source>
+      <translation>Lokaler</translation>
     </message>
     <message>
       <source>Enter at least one species or genus name, or tick All species.</source>

@@ -17,7 +17,8 @@ PACKAGE = ROOT / "species_data"
 I18N = PACKAGE / "i18n"
 TS = I18N / "species_data_sv.ts"
 QM = I18N / "species_data_sv.qm"
-CONTEXTS = {"dockwidget.py": "SpeciesDataDockWidget", "plugin.py": "SpeciesDataPlugin"}
+CONTEXTS = {"dockwidget.py": "SpeciesDataDockWidget", "plugin.py": "SpeciesDataPlugin",
+            "locality_tab.py": "LocalityTab"}
 
 MAGIC = bytes.fromhex("3cb86418caef9c95cd211cbf60a1bddd")
 

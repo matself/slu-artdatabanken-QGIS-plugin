@@ -1,8 +1,9 @@
 """Dock widget for Species Data (SLU Artdatabanken).
 
-Code-only (no .ui file, so no uic differences between Qt5 and Qt6). The five
-sections follow the structure of SLU Artdatabanken's own search page, Fynddata,
-and share one scrolling window above the fixed count and create buttons.
+Code-only (no .ui file, so no uic differences between Qt5 and Qt6). The "Fetch" tab
+has five sections that follow the structure of SLU Artdatabanken's own search page, Fynddata,
+and share one scrolling window above the fixed count and create buttons. The
+"Localities" tab (``locality_tab.py``) groups the observations of a fetched layer.
 """
 from datetime import date, datetime
 
@@ -31,12 +32,14 @@ from qgis.PyQt.QtWidgets import (
     QRadioButton,
     QScrollArea,
     QSpinBox,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from . import layers, provenance, snapshot
 from .download import CountTask, SnapshotTask
+from .locality_tab import LocalityTab
 from .query import (
     ABSENT,
     BOTH,
@@ -140,8 +143,11 @@ class SpeciesDataDockWidget(QDockWidget):
         source.setOpenExternalLinks(True)
         layout.addWidget(source)
         layout.addStretch()
-        self.setWidget(content)
         self._watch_inputs(content)
+        tabs = QTabWidget()
+        tabs.addTab(content, tr("Fetch"))
+        tabs.addTab(LocalityTab(iface), tr("Localities"))
+        self.setWidget(tabs)
         iface.mapCanvas().extentsChanged.connect(self._map_moved)
         self._clear_count()
 
