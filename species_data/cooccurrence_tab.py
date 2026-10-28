@@ -347,6 +347,8 @@ def _metadata(name, source, params, result):
                 f"{params.max_radius:g} m are split (0 = no limit); "
                 f"{'only current localities; ' if params.only_current else ''}"
                 f"{'searched-for-not-found counted as present.' if params.count_not_refound else 'searched-for-not-found not counted.'}",
+                "The result depends on two selections: the search filters of the observations "
+                "(above) and the settings used to form the localities. How to interpret it is up to the user.",
                 provenance.DISCLAIMER,
             ]
         )
