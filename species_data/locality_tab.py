@@ -23,6 +23,7 @@ from qgis.core import (
     QgsProject,
     QgsProperty,
     QgsRendererCategory,
+    QgsSymbolLayer,
     QgsTask,
     QgsVectorLayer,
 )
@@ -318,29 +319,38 @@ def build_layer(results: dict, source, params: clustering.Params):
     return layer
 
 
-# Size grows with the number of observations and levels off at SIZE_CAP, like the circles in
-# the HTML maps of publik-botanik-maps (radius 4 + number of observations, at most 20 px).
-SIZE_CAP = 16
-# Diameter in millimetres: twice the pixel radius, at 96 dpi.
-SIZE_EXPRESSION = f'0.5292 * (4 + least({SIZE_CAP}, "n_observations"))'
-FILL_ALPHA = 178  # 70 %
+# Diameter in millimetres, growing with the logarithm of the number of observations from
+# SIZE_MIN (one observation) to SIZE_MAX (SIZE_FULL observations or more), so that a locality
+# with a handful of records still looks clearly bigger than one with a single record.
+SIZE_MIN = 2.5
+SIZE_MAX = 10.0
+SIZE_FULL = 30
+SIZE_EXPRESSION = (
+    f'{SIZE_MIN} + {SIZE_MAX - SIZE_MIN} * min(1, ln("n_observations") / ln({SIZE_FULL}))'
+)
+FILL_ALPHA = 200  # about 80 %, so the colours still show on a grey base map
 
 
 def _renderer():
     categories = []
     for category, color in CATEGORY_COLORS.items():
-        fill = QColor(color)
+        base = QColor(color)
+        fill = QColor(base)
         fill.setAlpha(FILL_ALPHA)
+        outline = base.darker(170)
         symbol = QgsMarkerSymbol.createSimple(
             {
                 "name": "circle",
                 "color": f"{fill.red()},{fill.green()},{fill.blue()},{fill.alpha()}",
-                "size": "4",
-                "outline_color": color,
-                "outline_width": "0.26",
+                "size": str(SIZE_MIN),
+                "outline_color": outline.name(),
+                "outline_width": "0.4",
             }
         )
-        symbol.setDataDefinedSize(QgsProperty.fromExpression(SIZE_EXPRESSION))
+        # On the symbol layer: the symbol-level data defined size is not applied here.
+        symbol.symbolLayer(0).setDataDefinedProperty(
+            QgsSymbolLayer.Property.Size, QgsProperty.fromExpression(SIZE_EXPRESSION)
+        )
         categories.append(QgsRendererCategory(category, symbol, tr(CATEGORY_LABELS[category])))
     renderer = QgsCategorizedSymbolRenderer("category", categories)
     # Large localities are drawn first so small ones stay visible on top of them.
