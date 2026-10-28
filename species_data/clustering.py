@@ -121,9 +121,11 @@ def cluster(points: list, params: Params = Params()) -> Result:
 
     sets = _Sets(len(points))
     precise = [i for i in kept if _uncertainty(points[i], params) <= params.bridge_uncertainty]
+    # Ties are broken by position, not by input order, so the result does not depend on the
+    # order of the observations.
     vague = sorted(
         (i for i in kept if _uncertainty(points[i], params) > params.bridge_uncertainty),
-        key=lambda i: _uncertainty(points[i], params),
+        key=lambda i: (_uncertainty(points[i], params), points[i].x, points[i].y),
     )
 
     def limit(a, b):
@@ -145,12 +147,12 @@ def cluster(points: list, params: Params = Params()) -> Result:
     # localities together, so it cannot bridge sites that are apart.
     for a in vague:
         near = [
-            (_distance(points[a], points[b]), b)
+            (_distance(points[a], points[b]), points[b].x, points[b].y, b)
             for b in neighbours(a)
             if b in placed and _distance(points[a], points[b]) <= limit(a, b)
         ]
         if near:
-            sets.union(a, min(near)[1])
+            sets.union(a, min(near)[-1])
         placed.add(a)
 
     groups = {}
@@ -162,7 +164,8 @@ def cluster(points: list, params: Params = Params()) -> Result:
             for number, members in enumerate(groups.values())
             for key, part in _split(number, members, points, params)
         }
-    ordered = sorted(groups.values(), key=lambda g: g[0])
+    # Numbered from the south-west, so the numbers do not depend on the input order either.
+    ordered = sorted(groups.values(), key=lambda g: min((points[i].x, points[i].y) for i in g))
     result.localities = [_locality(n + 1, g, points, params) for n, g in enumerate(ordered)]
     return result
 
@@ -179,12 +182,13 @@ def _split(number, members, points, params):
         return [((number, 0), members)]
     centres = []  # indexes of the observations that start a part
     parts = {}
-    for i in sorted(members, key=lambda m: (_uncertainty(points[m], params), m)):
+    for i in sorted(members, key=lambda m: (_uncertainty(points[m], params), points[m].x, points[m].y)):
         nearest = min(
-            ((_distance(points[i], points[c]), c) for c in centres), default=(math.inf, None)
+            ((_distance(points[i], points[c]), points[c].x, points[c].y, c) for c in centres),
+            default=(math.inf, 0.0, 0.0, None),
         )
         if nearest[0] <= params.max_radius:
-            parts[nearest[1]].append(i)
+            parts[nearest[-1]].append(i)
         else:
             centres.append(i)
             parts[i] = [i]

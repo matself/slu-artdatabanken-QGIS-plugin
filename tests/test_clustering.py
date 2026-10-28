@@ -97,3 +97,26 @@ def test_a_string_of_points_is_split_by_max_radius():
 def test_max_radius_leaves_small_localities_alone():
     points = [Point(0, 0, 2024, 5), Point(50, 0, 2024, 5)]
     assert groups(cluster(points, Params(link_distance=100, max_radius=100))) == [[0, 1]]
+
+
+def test_the_result_does_not_depend_on_the_input_order():
+    import random
+
+    random.seed(7)
+    points = [
+        Point(random.uniform(0, 1500), random.uniform(0, 300), 2000 + i % 25, random.choice([5, 10, 50, 150, 300]))
+        for i in range(400)
+    ]
+
+    def shape(order):
+        shuffled = [points[i] for i in order]
+        result = cluster(shuffled, Params(link_distance=100, max_radius=100))
+        return sorted(
+            (loc.id, tuple(sorted((shuffled[m].x, shuffled[m].y) for m in loc.members))) for loc in result.localities
+        )
+
+    order = list(range(len(points)))
+    first = shape(order)
+    for _ in range(3):
+        random.shuffle(order)
+        assert shape(order) == first
