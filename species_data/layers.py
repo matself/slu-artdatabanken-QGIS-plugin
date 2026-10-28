@@ -2,13 +2,16 @@
 from datetime import datetime
 
 from qgis.core import (
+    Qgis,
     QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsFeature,
     QgsFeatureRequest,
     QgsField,
     QgsFields,
+    QgsFillSymbol,
     QgsGeometry,
+    QgsGeometryGeneratorSymbolLayer,
     QgsLayerMetadata,
     QgsMarkerSymbol,
     QgsPointXY,
@@ -90,11 +93,38 @@ def _convert(value, kind):
     return value
 
 
+# The uncertainty circle is a geometry generator symbol layer under the point, so it is part
+# of the same symbol and follows its colour. The layer is in metres (SWEREF 99 TM). To keep the
+# map readable the circle is only an outline, is drawn when zoomed in to CIRCLE_MAX_SCALE or
+# closer, and is left out for observations less precise than CIRCLE_MAX_METERS. The user can
+# switch the symbol layer off, or change these limits, in the layer styling panel.
+CIRCLE_MAX_METERS = 250
+CIRCLE_MAX_SCALE = 10000
+CIRCLE_EXPRESSION = (
+    f'if(@map_scale <= {CIRCLE_MAX_SCALE} and "coordinateUncertaintyInMeters" > 0 '
+    f'and "coordinateUncertaintyInMeters" <= {CIRCLE_MAX_METERS}, '
+    'buffer($geometry, "coordinateUncertaintyInMeters"), NULL)'
+)
+
+
 def _symbol(color):
-    return QgsMarkerSymbol.createSimple(
+    symbol = QgsMarkerSymbol.createSimple(
         {"name": "circle", "color": color.name(), "size": "2.4", "outline_color": "#ffffff",
          "outline_width": "0.25"}
     )
+    symbol.insertSymbolLayer(0, _uncertainty_circle(color))
+    return symbol
+
+
+def _uncertainty_circle(color):
+    generator = QgsGeometryGeneratorSymbolLayer.create({"geometryModifier": CIRCLE_EXPRESSION})
+    generator.setSymbolType(Qgis.SymbolType.Fill)
+    generator.setSubSymbol(
+        QgsFillSymbol.createSimple(
+            {"style": "no", "outline_color": color.name(), "outline_width": "0.25"}
+        )
+    )
+    return generator
 
 
 def _year_renderer(layer):
