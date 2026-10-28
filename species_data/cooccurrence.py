@@ -75,13 +75,16 @@ def find_places(nodes: list, wanted: tuple, params: Params = Params()) -> Result
     result = Result(wanted=wanted, left_out=len(nodes) - len(usable))
     # Each locality is a point whose uncertainty is its radius, so large localities reach further.
     points = [clustering.Point(nodes[i].x, nodes[i].y, None, nodes[i].radius) for i in usable]
+    # Every locality may link and none is left out: the limits are just above the widest locality.
+    # They also set the cell size of the search grid, so they must not be larger than needed.
+    widest = max((p.uncertainty for p in points), default=0.0) + 1.0
     grouping = clustering.cluster(
         points,
         clustering.Params(
             link_distance=params.max_gap,
             uncertainty_weight=1.0,
-            max_uncertainty=1e9,
-            bridge_uncertainty=1e9,
+            max_uncertainty=widest,
+            bridge_uncertainty=widest,
             max_radius=params.max_radius,
         ),
     )
