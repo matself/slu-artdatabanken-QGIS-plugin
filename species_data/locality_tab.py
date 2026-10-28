@@ -14,6 +14,7 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsFeature,
+    QgsFeatureRequest,
     QgsField,
     QgsGeometry,
     QgsLayerMetadata,
@@ -27,6 +28,7 @@ from qgis.core import (
 )
 from qgis.gui import QgsMapLayerComboBox
 from qgis.PyQt.QtCore import QCoreApplication, QMetaType
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QFormLayout,
@@ -316,15 +318,36 @@ def build_layer(results: dict, source, params: clustering.Params):
     return layer
 
 
+# Size grows with the number of observations and levels off at SIZE_CAP, like the circles in
+# the HTML maps of publik-botanik-maps (radius 4 + number of observations, at most 20 px).
+SIZE_CAP = 16
+# Diameter in millimetres: twice the pixel radius, at 96 dpi.
+SIZE_EXPRESSION = f'0.5292 * (4 + least({SIZE_CAP}, "n_observations"))'
+FILL_ALPHA = 178  # 70 %
+
+
 def _renderer():
     categories = []
     for category, color in CATEGORY_COLORS.items():
+        fill = QColor(color)
+        fill.setAlpha(FILL_ALPHA)
         symbol = QgsMarkerSymbol.createSimple(
-            {"name": "circle", "color": color, "size": "3", "outline_color": "#ffffff", "outline_width": "0.3"}
+            {
+                "name": "circle",
+                "color": f"{fill.red()},{fill.green()},{fill.blue()},{fill.alpha()}",
+                "size": "4",
+                "outline_color": color,
+                "outline_width": "0.26",
+            }
         )
-        symbol.setDataDefinedSize(QgsProperty.fromExpression('3 + least(8, sqrt("n_observations"))'))
+        symbol.setDataDefinedSize(QgsProperty.fromExpression(SIZE_EXPRESSION))
         categories.append(QgsRendererCategory(category, symbol, tr(CATEGORY_LABELS[category])))
-    return QgsCategorizedSymbolRenderer("category", categories)
+    renderer = QgsCategorizedSymbolRenderer("category", categories)
+    # Large localities are drawn first so small ones stay visible on top of them.
+    order = QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause('"n_observations"', False)])
+    renderer.setOrderBy(order)
+    renderer.setOrderByEnabled(True)
+    return renderer
 
 
 def _metadata(name, source, params):
