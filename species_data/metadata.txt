@@ -3,10 +3,10 @@ name=Species Data (SLU Artdatabanken)
 qgisMinimumVersion=3.44
 qgisMaximumVersion=4.99
 description=Fetch vascular plant observations from Artportalen (SLU Artdatabanken) as a temporary, year-coloured point layer.
-version=0.1.0
+version=0.2.0
 author=Mats Elfström
 email=mats.elfstrom@gmail.com
-about=Build dot maps of vascular plant observations from Artportalen, using the open WFS service of the SLU Artdatabanken Species Observation System, without needing to know APIs or filter languages. Search by species name, period, map extent or county, count the matches first, and add them as a temporary point layer coloured by year. No account or API key is needed. Covers Sweden only, vascular plants only, Artportalen data only; protected (sensitive) observations are not included, and personal data fields are never downloaded. The user interface is in English with a Swedish translation, and a text explaining the panel is in the README. This is an independent, community-developed plugin. It is not developed, owned or endorsed by SLU or SLU Artdatabanken. Data is retrieved from SLU Artdatabanken under their API terms.
+about=Build dot maps of vascular plant observations from Artportalen, using the open WFS service of the SLU Artdatabanken Species Observation System, without needing to know APIs or filter languages. Search by species name, period, map extent or county, count the matches first, and add them as a temporary point layer coloured by year. Two more tabs group the observations into localities and find places where several species have been reported from the same place. No account or API key is needed. Covers Sweden only, vascular plants only, Artportalen data only; protected (sensitive) observations are not included, and personal data fields are never downloaded. The user interface is in English with a Swedish translation, and a text explaining the panel is in the README. This is an independent, community-developed plugin. It is not developed, owned or endorsed by SLU or SLU Artdatabanken. Data is retrieved from SLU Artdatabanken under their API terms.
 tracker=https://github.com/matself/slu-artdatabanken-QGIS-plugin/issues
 repository=https://github.com/matself/slu-artdatabanken-QGIS-plugin
 homepage=https://github.com/matself/slu-artdatabanken-QGIS-plugin
@@ -18,4 +18,5 @@ deprecated=False
 license=GPL-2.0-or-later
 hasProcessingProvider=no
 changelog=
+    0.2.0 - New tabs: Localities groups observations into localities (size presets, coordinate uncertainty, optional locality_id field), and Co-occurrence finds places where several chosen species have been reported from the same place (points or heat map). Settings are remembered and stored in the result metadata.
     0.1.0 - Initial version: search vascular plant observations by name, period, area and properties, count before fetching, temporary layer coloured by year.
