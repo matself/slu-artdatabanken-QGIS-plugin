@@ -92,8 +92,9 @@ class _Sets:
             self.parent[max(a, b)] = min(a, b)
 
 
-def cluster(points: list, params: Params = Params()) -> Result:
-    """Group ``points`` into localities according to ``params``."""
+def cluster(points: list, params: Optional[Params] = None) -> Result:
+    """Group ``points`` into localities according to ``params`` (the defaults when omitted)."""
+    params = params or Params()
     result = Result()
     kept = []
     for index, point in enumerate(points):

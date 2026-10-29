@@ -68,8 +68,9 @@ def eligible(node: Node, params: Params) -> bool:
     return True
 
 
-def find_places(nodes: list, wanted: tuple, params: Params = Params()) -> Result:
+def find_places(nodes: list, wanted: tuple, params: Optional[Params] = None) -> Result:
     """Group the localities of the ``wanted`` species into places."""
+    params = params or Params()
     wanted = tuple(sorted(wanted))
     usable = [i for i, n in enumerate(nodes) if n.species in wanted and eligible(n, params)]
     result = Result(wanted=wanted, left_out=len(nodes) - len(usable))
