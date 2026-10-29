@@ -16,3 +16,7 @@ Regler:
 - Om du är osäker på licensen, skriv "licens okänd" i stället för att gissa.
 - Skilj på "läste som referens" och "kopierade/anpassade kod".
 - Du kan bara logga det du faktiskt läser eller hämtar i sessionen. Skriv inte påhittade källor för mönster som kommer från din träning.
+
+## Metodbeskrivningar
+
+`docs/metod-lokaler.md` och `docs/metod-samvariation.md` beskriver metoderna vetenskapligt och ska hållas i takt med koden. Ändrar du algoritmen, standardvärden, klassregler, storleksval eller hur resultatet visas ska du i samma commit uppdatera texten, raden "Gäller pluginversion", den maskinläsbara raden `<!-- defaults: ... -->` och ändringshistoriken längst ned. Beskriv bara det koden faktiskt gör, och skriv inte in valideringar som inte har gjorts.
