@@ -1,4 +1,5 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
 <TS version="2.1" language="sv_SE">
   <context>
     <name>CooccurrenceTab</name>
@@ -261,8 +262,16 @@
       <translation>Artdata</translation>
     </message>
     <message>
+      <source>Species to group into localities:</source>
+      <translation>Arter som ska grupperas till lokaler:</translation>
+    </message>
+    <message>
       <source>Choose a layer fetched with this plugin.</source>
       <translation>Välj ett lager som hämtats med pluginet.</translation>
+    </message>
+    <message>
+      <source>Tick at least one species in the list.</source>
+      <translation>Kryssa i minst en art i listan.</translation>
     </message>
     <message>
       <source>(no name)</source>

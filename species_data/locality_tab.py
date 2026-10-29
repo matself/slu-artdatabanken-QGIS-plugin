@@ -28,7 +28,7 @@ from qgis.core import (
     QgsVectorLayer,
 )
 from qgis.gui import QgsCollapsibleGroupBox, QgsMapLayerComboBox
-from qgis.PyQt.QtCore import QCoreApplication, QMetaType
+from qgis.PyQt.QtCore import QCoreApplication, QMetaType, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -38,6 +38,8 @@ from qgis.PyQt.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QListWidget,
+    QListWidgetItem,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -126,6 +128,18 @@ class LocalityTab(QWidget):
         self.layer_box.setAllowEmptyLayer(True)
         form.addRow(tr("Observation layer"), self.layer_box)
 
+        # With several species in the layer the user picks which ones to group: a common
+        # species is rarely of interest by itself. Hidden while the layer has only one.
+        self.species_box = QWidget()
+        species_layout = QVBoxLayout(self.species_box)
+        species_layout.setContentsMargins(0, 0, 0, 0)
+        species_layout.addWidget(QLabel(tr("Species to group into localities:")))
+        self.species_list = QListWidget()
+        self.species_list.setMaximumHeight(110)
+        species_layout.addWidget(self.species_list)
+        form.addRow(self.species_box)
+        self.species_box.setVisible(False)
+
         # The size of a locality is the one thing most users need to choose.
         self.size_box = QComboBox()
         for name, size in settings.SIZE_PRESETS:
@@ -212,6 +226,7 @@ class LocalityTab(QWidget):
         else:
             self._size_from_values()
         self.layer_box.layerChanged.connect(self._layer_changed)
+        self.species_list.itemChanged.connect(lambda *_: self._refresh())
         self._layer_changed(self.layer_box.currentLayer())
 
     # -- size and settings ---------------------------------------------------------------
@@ -282,6 +297,39 @@ class LocalityTab(QWidget):
 
     def _layer_changed(self, layer):
         found = self.check(layer)
+        self._fill_species(layer if not found else None)
+        self._refresh(found)
+
+    def _fill_species(self, layer):
+        self.species_list.blockSignals(True)
+        self.species_list.clear()
+        if layer is not None:
+            names = sorted(
+                {v or tr("(no name)") for v in layer.uniqueValues(layer.fields().indexOf("scientificName"))}
+            )
+            for name in names:
+                item = QListWidgetItem(name)
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setCheckState(Qt.CheckState.Checked)
+                self.species_list.addItem(item)
+        self.species_list.blockSignals(False)
+        self.species_box.setVisible(self.species_list.count() > 1)
+
+    def _chosen(self):
+        """The ticked species, or None when the list is not in use (one species or none)."""
+        if self.species_list.count() < 2:
+            return None
+        return {
+            self.species_list.item(i).text()
+            for i in range(self.species_list.count())
+            if self.species_list.item(i).checkState() == Qt.CheckState.Checked
+        }
+
+    def _refresh(self, found=None):
+        if found is None:
+            found = self.check(self.layer_box.currentLayer())
+        if not found and self._chosen() == set():
+            found = [tr("Tick at least one species in the list.")]
         self.run_button.setEnabled(not found and self._task is None)
         self.status.setText("\n".join(found))
 
@@ -296,9 +344,12 @@ class LocalityTab(QWidget):
         has_present = "isPresentObservation" in names
         by_species = {}
         self._fids = {}  # feature ids, in the same order as the points of each species
+        chosen = self._chosen()
         for feature in layer.getFeatures():
             geometry = feature.geometry()
             if geometry.isNull():
+                continue
+            if chosen is not None and (feature["scientificName"] or tr("(no name)")) not in chosen:
                 continue
             not_refound = bool(has_flag and feature["isNotRediscoveredObservation"] is True)
             if has_present and feature["isPresentObservation"] is False and not not_refound:
@@ -353,7 +404,7 @@ class LocalityTab(QWidget):
     def _finished(self):
         self._task = None
         self.progress.setVisible(False)
-        self._layer_changed(self.layer_box.currentLayer())
+        self._refresh()  # keeps the ticked species
 
     def _done(self, results):
         params = self._params_used

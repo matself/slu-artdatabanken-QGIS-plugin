@@ -109,7 +109,7 @@ Sällsynta arter rapporteras ofta flera gånger från samma plats, med olika nog
 **Så gör du i de flesta fall**
 
 1. Hämta fynd på fliken Hämta, eller öppna en sparad GeoPackage. Lagret måste vara hämtat med pluginet och ha sin metadata kvar: spara med *Exportera > Spara objekt som* och låt *Spara lagrets metadata* vara ikryssad. Annars säger fliken vad som saknas.
-2. Välj lagret på fliken Lokaler.
+2. Välj lagret på fliken Lokaler. Innehåller lagret flera arter visas en lista där du kryssar i de arter som ska grupperas. En vanlig art blir ofta intressant först tillsammans med sällsynta, så välj bara de arter du vill ha lokaler för. Arter du inte kryssar i får inget `locality_id`.
 3. Välj **Lokalstorlek**: *Strikt* (50 m), *Standard* (100 m) eller *Generös* (200 m). Storleken avgör hur nära fynd måste ligga för att bli en lokal, och hur bred en lokal får bli.
 4. Tryck på **Gruppera till lokaler**.
 
