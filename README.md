@@ -18,6 +18,15 @@ The panel has five collapsible sections, in the same order as SLU Artdatabanken'
 
 **Count observations** shows how many observations match, without downloading them. **Fetch and show observations** counts if needed, asks for confirmation above 2 000 observations, refuses above 100 000, downloads the observations in the background with a progress bar, and adds them as a temporary layer, coloured by year. Save the layer with QGIS' own tools (the memory layer indicator, or *Export > Save Features As*).
 
+### Localities and Samvariation (co-occurrence) tabs
+
+Two more tabs work on a layer fetched with this plugin (fetched now, or saved to a GeoPackage with its metadata):
+
+- **Lokaler (Localities):** groups the observations of each species into localities. With several species in the layer, tick the species to group. Choose a locality size (*Strikt* strict 50 m, *Standard* 100 m, *Generös* generous 200 m) and press *Gruppera till lokaler* (group into localities). Under *Avancerat* (advanced) the individual distances and year limits can be set. The result is a temporary layer with one point per locality and species (number of observations and years, radius, class), and optionally a `locality_id` field on the observation layer.
+- **Samvariation (Co-occurrence):** finds places where several of the chosen species have been reported from the same place, not necessarily at the same time. Tick the species, choose a place size, show the result as points or a heat map, and press *Hitta platser med flera arter* (find places with several species).
+
+The settings of a result are stored in its layer metadata, so a result can be repeated with *Använd* (use). How to interpret co-occurrence is up to the user, since it depends on both the search and the locality settings. A longer description, in Swedish, is in the user guide.
+
 Limits of this version: vascular plants only, Artportalen data only, no protected (sensitive) observations, no API key needed.
 
 ## Data, personal data and terms

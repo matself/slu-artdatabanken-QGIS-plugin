@@ -112,7 +112,8 @@ def cluster(points: list, params: Params = Params()) -> Result:
         buckets.setdefault((math.floor(points[i].x / cell), math.floor(points[i].y / cell)), []).append(i)
     # Precise points can only reach each other over a shorter distance: a finer grid
     # keeps the number of pairs to test small in dense data.
-    precise_cell = max(params.link_distance + 2 * min(params.bridge_uncertainty, params.max_uncertainty) * params.uncertainty_weight, 1.0)
+    precise_reach = 2 * min(params.bridge_uncertainty, params.max_uncertainty) * params.uncertainty_weight
+    precise_cell = max(params.link_distance + precise_reach, 1.0)
     precise_buckets = {}
     for i in kept:
         if _uncertainty(points[i], params) <= params.bridge_uncertainty:

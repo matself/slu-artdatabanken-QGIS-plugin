@@ -438,12 +438,14 @@ def _metadata(name, source, params, result):
             [
                 source.metadata().abstract() or provenance.SOURCE,
                 "",
-                "Places where the species have been reported from the same place (not necessarily at the same time), found with the plugin Species Data "
+                "Places where the species have been reported from the same place (not necessarily "
+                "at the same time), found with the plugin Species Data "
                 f"(SLU Artdatabanken): species {', '.join(result.wanted)}; localities within "
                 f"{params.max_gap:g} m plus their radii form one place; places wider than a radius of "
                 f"{params.max_radius:g} m are split (0 = no limit); "
                 f"{'only current localities; ' if params.only_current else ''}"
-                f"{'searched-for-not-found counted as present.' if params.count_not_refound else 'searched-for-not-found not counted.'}",
+                f"{'searched-for-not-found counted as present.' if params.count_not_refound else ''}"
+                f"{'' if params.count_not_refound else 'searched-for-not-found not counted.'}",
                 "The result depends on two selections: the search filters of the observations "
                 "(above) and the settings used to form the localities. How to interpret it is up to the user.",
                 provenance.DISCLAIMER,
