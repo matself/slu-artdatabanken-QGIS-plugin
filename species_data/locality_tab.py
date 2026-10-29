@@ -40,6 +40,7 @@ from qgis.PyQt.QtWidgets import (
     QPushButton,
     QListWidget,
     QListWidgetItem,
+    QSizePolicy,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -135,7 +136,7 @@ class LocalityTab(QWidget):
         species_layout.setContentsMargins(0, 0, 0, 0)
         species_layout.addWidget(QLabel(tr("Species to group into localities:")))
         self.species_list = QListWidget()
-        self.species_list.setMaximumHeight(110)
+        self.species_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         species_layout.addWidget(self.species_list)
         form.addRow(self.species_box)
         self.species_box.setVisible(False)
@@ -313,7 +314,9 @@ class LocalityTab(QWidget):
                 item.setCheckState(Qt.CheckState.Checked)
                 self.species_list.addItem(item)
         self.species_list.blockSignals(False)
-        self.species_box.setVisible(self.species_list.count() > 1)
+        rows = self.species_list.count()
+        self.species_list.setFixedHeight(min(rows, 6) * self.species_list.sizeHintForRow(0) + 6 if rows else 0)
+        self.species_box.setVisible(rows > 1)
 
     def _chosen(self):
         """The ticked species, or None when the list is not in use (one species or none)."""
@@ -385,6 +388,7 @@ class LocalityTab(QWidget):
             return
         self._source = layer
         self._points = self._read_points(layer)
+        self._subset = self._chosen() is not None and len(self._chosen()) < self.species_list.count()
         params = self._params()
         if not any(self._points.values()):
             QMessageBox.information(self, tr("Species Data"), tr("The layer has no usable observations."))
@@ -408,7 +412,7 @@ class LocalityTab(QWidget):
 
     def _done(self, results):
         params = self._params_used
-        layer = build_layer(results, self._source, params)
+        layer = build_layer(results, self._source, params, self._subset)
         self._finished()
         QgsProject.instance().addMapLayer(layer)
         written = ""
@@ -485,9 +489,15 @@ def write_locality_ids(layer, numbers: dict):
     layer.triggerRepaint()
 
 
-def build_layer(results: dict, source, params: clustering.Params):
-    """A temporary layer with one point per locality."""
-    layer = QgsVectorLayer(f"Point?crs={CRS}", f"{source.name()}: localities", "memory")
+def build_layer(results: dict, source, params: clustering.Params, subset: bool = False):
+    """A temporary layer with one point per locality.
+
+    ``subset`` is true when only some of the species of ``source`` were grouped; the layer is
+    then named after them instead of after the source.
+    """
+    names = ", ".join(sorted(results))
+    name = f"{names}: localities" if subset else f"{source.name()}: localities"
+    layer = QgsVectorLayer(f"Point?crs={CRS}", name, "memory")
     fields = (
         ("species", QMetaType.Type.QString),
         ("locality_id", QMetaType.Type.Int),
@@ -514,7 +524,7 @@ def build_layer(results: dict, source, params: clustering.Params):
             features.append(feature)
     layer.dataProvider().addFeatures(features)
     layer.setRenderer(_renderer())
-    layer.setMetadata(_metadata(layer.name(), source, params))
+    layer.setMetadata(_metadata(layer.name(), source, params, sorted(results) if subset else ()))
     return layer
 
 
@@ -559,7 +569,7 @@ def _renderer():
     return renderer
 
 
-def _metadata(name, source, params):
+def _metadata(name, source, params, species=()):
     meta = QgsLayerMetadata()
     meta.setTitle(name)
     lines = [
@@ -573,6 +583,8 @@ def _metadata(name, source, params):
         f"localities wider than a radius of {params.max_radius:g} m split up (0 = no limit).",
         provenance.DISCLAIMER,
     ]
+    if species:
+        lines.insert(2, "Species grouped: " + ", ".join(species) + ".")
     meta.setAbstract("\n".join(lines))
     meta.setRights(source.metadata().rights() or [provenance.DISCLAIMER])
     meta.setType("dataset")
