@@ -1,3 +1,5 @@
+<img src="species_data/icon.svg" alt="Plugin icon" width="72" height="72" align="right">
+
 # Species Data (SLU Artdatabanken)
 
 A QGIS plugin for building dot maps of vascular plant observations from the Artportalen data held by SLU Artdatabanken, without needing to know APIs or filter languages.
