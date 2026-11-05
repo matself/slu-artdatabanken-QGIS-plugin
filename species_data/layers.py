@@ -1,5 +1,6 @@
 """Build the temporary observation layer. The user saves it with QGIS own tools."""
 from datetime import datetime
+from typing import Optional
 
 from qgis.core import (
     Qgis,
@@ -55,12 +56,20 @@ MAP_TIP = (
 
 
 def create_layer(
-    rows, fields: tuple, query: Query, name: str, count: Count, retrieved: datetime = None
+    rows,
+    fields: tuple,
+    query: Optional[Query],
+    name: str,
+    count: Count,
+    retrieved: datetime = None,
+    abstract: str = None,
+    rights: list = None,
 ):
     """The observations as a temporary (memory) layer.
 
     Nothing is written to disk. QGIS marks the layer as temporary and offers to make it
-    permanent, or the user can export it with "Save Features As".
+    permanent, or the user can export it with "Save Features As". A layer opened from a file
+    has no query: it passes its own ``abstract`` (and ``rights``) instead.
     """
     retrieved = retrieved or datetime.now()
     layer = _memory_layer(rows, fields)
@@ -68,7 +77,7 @@ def create_layer(
     layer.setRenderer(_year_renderer(layer))
     layer.setDisplayExpression(DISPLAY_EXPRESSION)
     layer.setMapTipTemplate(MAP_TIP)
-    layer.setMetadata(_metadata(query, name, count, retrieved))
+    layer.setMetadata(_metadata(query, name, count, retrieved, abstract, rights))
     return layer
 
 
@@ -93,6 +102,9 @@ def _convert(value, kind):
     if value is None:
         return None
     if kind == "date":
+        if len(value) == 10:  # a plain date, as in an export from Fynddata
+            day = QDate.fromString(value, Qt.DateFormat.ISODate)
+            return day if day.isValid() else None
         moment = QDateTime.fromString(value, Qt.DateFormat.ISODate)
         return moment.toTimeZone(_STOCKHOLM).date() if moment.isValid() else None
     return value
@@ -157,11 +169,13 @@ def _year_renderer(layer):
     return renderer
 
 
-def _metadata(query, name, count, retrieved):
+def _metadata(query, name, count, retrieved, abstract=None, rights=None):
     meta = QgsLayerMetadata()
     meta.setTitle(name)
-    meta.setAbstract(provenance.abstract(query, count, retrieved))
-    meta.setRights([provenance.citation(retrieved), provenance.DISCLAIMER])
+    meta.setAbstract(abstract or provenance.abstract(query, count, retrieved))
+    if rights is None:
+        rights = [provenance.citation(retrieved)]
+    meta.setRights([*rights, provenance.DISCLAIMER])
     meta.setType("dataset")
     meta.setCrs(QgsCoordinateReferenceSystem(CRS))
     return meta

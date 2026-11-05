@@ -104,6 +104,23 @@ Läggs till när sökningen kan ge sådana fynd: `isPresentObservation`, `isNotR
 
 Datum är omräknade till svensk lokal tid. Antal och enhet ligger kvar som text, precis som i källan, och är ofta tomma.
 
+## Öppna en export från Fynddata
+
+Vill du styra sökningen mer än panelen tillåter kan du söka i SLU:s egen söksida Fynddata, spara resultatet som en GeoJSON-fil (en export) och öppna den i pluginet.
+
+1. I Fynddata: gör sökningen, välj att exportera som GeoJSON och packa upp zip-filen. Zip-filen innehåller GeoJSON-filen och filerna `filter.md`, `citation.md` och `datasets.md`. Lägg dem i samma mapp.
+2. På fliken Hämta: klicka **Öppna en export från Fynddata...** och välj GeoJSON-filen.
+3. Dialogen visar hur många fynd filen har och vilka kolumner som läses. Klicka **Skapa lager**.
+
+Resultatet är ett tillfälligt lager som ser ut som ett hämtat: prickar färgade efter år, osäkerhetscirkel och kartverktygstips. Fliken Lokaler och fliken Samvariation fungerar på det som på ett hämtat lager.
+
+- Bara de kolumner som motsvarar pluginets egna fält läses: art, svenskt namn, datum, lokal, kommun, län, landskap, koordinatnoggrannhet, rödlistekategori, mängd, dataset och om fyndet är "ej funnet", "ej återfunnet" eller osäkert bestämt. **Övriga kolumner, bland annat observatörens namn, läses aldrig.**
+- Fynd som är markerade "ej funnet" (frånvaro) hoppas över. Fynd som är "ej återfunnet" tas med och märks.
+- Filerna `filter.md`, `citation.md` och `datasets.md` läggs i lagrets metadata om de hör till samma export. Det avgörs av tidpunkten i filnamnet och i filernas rubriker, så att en gammal `filter.md` i samma mapp inte används av misstag. Om filerna saknas eller hör till en annan export står det i dialogen, och lagrets metadata säger att urvalet inte är känt.
+- Exporten kan ha fler källor än Artportalen, till exempel Virtuella Herbariet och iNaturalist. Fältet `datasetName` finns kvar i lagret, och antalet per dataset står i metadatan. Resultatet beror då på vilka källor du valde i Fynddata.
+- Pluginet har bara provats med exporter från Fynddata på svenska. Kolumnerna i en export på engelska känns inte igen.
+- Filer med fler än 100 000 fynd ger en fråga innan lagret skapas, eftersom kartan och grupperingen blir långsamma.
+
 ## Lokaler (fliken Lokaler)
 
 Sällsynta arter rapporteras ofta flera gånger från samma plats, med olika noggrannhet, så att en lokal ser ut som flera. Fliken **Lokaler** slår ihop sådana fynd till en lokal.

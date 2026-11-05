@@ -33,6 +33,7 @@ Konsekvenser som är värda att känna till:
 - Ett fynd utan angiven noggrannhet behandlas som om det hade den största tillåtna noggrannheten (standard 500 m).
 - Fynd med angiven noggrannhet över gränsen U_max (standard 500 m) lämnas helt utanför. Antalet redovisas efter körningen. Det ger en selektion mot precisa fynd, se avsnitt 8.
 - Fynd utan datum bidrar till antal fynd men inte till årtal.
+- Fynden kan också komma från en export från Fynddata som öppnats i pluginet. Då gäller samma fält och samma regler, men urvalet är det användaren gjorde i Fynddata. Det står i lagrets metadata (från exportens `filter.md`) och kan innehålla fler källor än Artportalen. Exportens kolumn "Ej funnen" tolkas som frånvaro (fynd som hoppas över), och "Ej återfunnen" som "eftersökt, ej återfunnen". Den tolkningen har inte kunnat kontrolleras mot data, eftersom alla fynd i den fil som provades hade värdet falskt.
 - Det som hämtats ur tjänsten styrs av sökningen (art, område, period, förekomst, källa, noggrannhetsgräns). Sökningen står i lagrets metadata och är den första av de två selektioner resultatet bygger på.
 
 ## 3. Algoritmen

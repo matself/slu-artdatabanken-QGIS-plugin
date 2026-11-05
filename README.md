@@ -29,6 +29,8 @@ Two more tabs work on a layer fetched with this plugin (fetched now, or saved to
 
 The settings of a result are stored in its layer metadata, so a result can be repeated with *Använd* (use). How to interpret co-occurrence is up to the user, since it depends on both the search and the locality settings. A longer description, in Swedish, is in the user guide.
 
+**Open an export from Fynddata** makes a layer of a GeoJSON file saved from SLU's search page Fynddata (Swedish column names), so a search made there can be used on the Localities and Co-occurrence tabs. Only columns matching the plugin's own fields are read.
+
 Limits of this version: vascular plants only, Artportalen data only, no protected (sensitive) observations, no API key needed.
 
 ## Documentation

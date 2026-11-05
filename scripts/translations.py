@@ -21,7 +21,8 @@ CONTEXTS = {"dockwidget.py": "SpeciesDataDockWidget", "plugin.py": "SpeciesDataP
             "locality_tab.py": "LocalityTab",
             "layers.py": "Layers",
             "cooccurrence_tab.py": "CooccurrenceTab",
-            "settings_widgets.py": "SettingsWidgets"}
+            "settings_widgets.py": "SettingsWidgets",
+            "export_dialog.py": "ExportDialog"}
 
 MAGIC = bytes.fromhex("3cb86418caef9c95cd211cbf60a1bddd")
 

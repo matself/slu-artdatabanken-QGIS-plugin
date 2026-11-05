@@ -129,6 +129,69 @@
     </message>
   </context>
   <context>
+    <name>ExportDialog</name>
+    <message>
+      <source>Open an export from Fynddata</source>
+      <translation>Öppna en export från Fynddata</translation>
+    </message>
+    <message>
+      <source>GeoJSON (*.geojson *.json)</source>
+      <translation>GeoJSON (*.geojson *.json)</translation>
+    </message>
+    <message>
+      <source>Create layer</source>
+      <translation>Skapa lager</translation>
+    </message>
+    <message>
+      <source>This does not look like an export from Fynddata: none of its columns are recognised.</source>
+      <translation>Det här ser inte ut som en export från Fynddata: inga av kolumnerna känns igen.</translation>
+    </message>
+    <message>
+      <source>Other columns, including the observer, are not read.</source>
+      <translation>Övriga kolumner, bland annat observatören, läses inte.</translation>
+    </message>
+    <message>
+      <source>The search filter, citation and datasets of the export were found and are put in the layer metadata.</source>
+      <translation>Exportens sökfilter, källhänvisning och dataset hittades och läggs i lagrets metadata.</translation>
+    </message>
+    <message>
+      <source>Species Data</source>
+      <translation>Artdata</translation>
+    </message>
+    <message>
+      <source>The layer could not be created.</source>
+      <translation>Lagret kunde inte skapas.</translation>
+    </message>
+    <message>
+      <source>The files filter.md, citation.md and datasets.md were not found next to the file.</source>
+      <translation>Filerna filter.md, citation.md och datasets.md hittades inte bredvid filen.</translation>
+    </message>
+    <message>
+      <source>These columns are missing, so the file cannot be used: {fields}.</source>
+      <translation>Dessa kolumner saknas, så filen kan inte användas: {fields}.</translation>
+    </message>
+    <message>
+      <source>Columns that are read: {columns}.</source>
+      <translation>Kolumner som läses: {columns}.</translation>
+    </message>
+    <message>
+      <source>The file has {n} observations. A map of that many points is slow, and grouping takes a while. Continue?</source>
+      <translation>Filen har {n} fynd. En karta med så många punkter blir långsam, och grupperingen tar en stund. Fortsätta?</translation>
+    </message>
+    <message>
+      <source>{n} observations</source>
+      <translation>{n} fynd</translation>
+    </message>
+    <message>
+      <source>{files} next to the file belong to another export and are not used.</source>
+      <translation>{files} bredvid filen hör till en annan export och används inte.</translation>
+    </message>
+    <message>
+      <source>The file could not be read: {why}</source>
+      <translation>Filen kunde inte läsas: {why}</translation>
+    </message>
+  </context>
+  <context>
     <name>Layers</name>
     <message>
       <source>Uncertainty</source>
@@ -358,6 +421,14 @@
     <message>
       <source>Fetch and show observations</source>
       <translation>Hämta och visa fynd</translation>
+    </message>
+    <message>
+      <source>Open an export from Fynddata...</source>
+      <translation>Öppna en export från Fynddata...</translation>
+    </message>
+    <message>
+      <source>Make a layer of a GeoJSON file saved from SLU's Fynddata, to use on the Localities tab.</source>
+      <translation>Gör ett lager av en GeoJSON-fil sparad från SLU:s Fynddata, att använda på fliken Lokaler.</translation>
     </message>
     <message>
       <source>Fetch</source>

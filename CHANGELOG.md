@@ -3,6 +3,7 @@
 All notable changes to Species Data (SLU Artdatabanken). The same entries, shortened, are in the `changelog` key of `species_data/metadata.txt`, which is what QGIS and plugins.qgis.org show. Keep the two in step.
 
 ## Unreleased
+- New button on the Fetch tab: **Open an export from Fynddata**. It makes a layer of a GeoJSON file saved from SLU's Fynddata, with the same fields and style as a fetched layer, so the Localities and Co-occurrence tabs work on it. Only columns that match the plugin's own fields are read (the observer is never read). The filter, citation and datasets files of the export are put in the layer metadata when they belong to the same export. Swedish column names only.
 - A species name in the search now also finds its subspecies, varieties and forms, like the search page of SLU Artdatabanken. A Swedish species name is looked up to its scientific name for the same reason. Hybrids are not included.
 - The Localities tab groups subspecies, varieties and forms under their species, and the new field `taxa` lists the names in each locality with their number of observations.
 

@@ -41,6 +41,7 @@ from qgis.PyQt.QtWidgets import (
 from . import layers, provenance, snapshot
 from .cooccurrence_tab import CooccurrenceTab
 from .download import CountTask, SnapshotTask
+from .export_dialog import open_export
 from .locality_tab import LocalityTab
 from .query import (
     ABSENT,
@@ -133,6 +134,12 @@ class SpeciesDataDockWidget(QDockWidget):
         layout.addWidget(self.count_label)
         layout.addWidget(self.progress)
         layout.addWidget(self.create_button)
+        self.open_export_button = QPushButton(tr("Open an export from Fynddata..."))
+        self.open_export_button.setToolTip(
+            tr("Make a layer of a GeoJSON file saved from SLU's Fynddata, to use on the Localities tab.")
+        )
+        self.open_export_button.clicked.connect(lambda: open_export(self.iface, self))
+        layout.addWidget(self.open_export_button)
 
         source = QLabel(
             tr(
