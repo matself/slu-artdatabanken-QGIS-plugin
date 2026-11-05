@@ -14,6 +14,7 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsFeature,
+    QgsFeatureRequest,
     QgsField,
     QgsGeometry,
     QgsLayerMetadata,
@@ -559,11 +560,19 @@ SIZE_EXPRESSION = (
     f'{SIZE_MIN} + {SIZE_MAX - SIZE_MIN} * min(1, ln("n_observations") / ln({SIZE_FULL}))'
 )
 FILL_ALPHA = 200  # about 80 %, so the colours still show on a grey base map
+# The rank of each class for the draw order: the first class of the legend gets the highest rank.
+RANK_EXPRESSION = (
+    "CASE "
+    + " ".join(
+        f"WHEN \"category\" = '{name}' THEN {len(CATEGORY_COLORS) - rank}" for rank, name in enumerate(CATEGORY_COLORS)
+    )
+    + " ELSE 0 END"
+)
 
 
 def _renderer():
     categories = []
-    for position, (category, color) in enumerate(CATEGORY_COLORS.items()):
+    for category, color in CATEGORY_COLORS.items():
         base = QColor(color)
         fill = QColor(base)
         fill.setAlpha(FILL_ALPHA)
@@ -581,13 +590,13 @@ def _renderer():
         symbol.symbolLayer(0).setDataDefinedProperty(
             QgsSymbolLayer.Property.Size, QgsProperty.fromExpression(SIZE_EXPRESSION)
         )
-        # The classes are drawn in the order of the legend: the first is on top, like the
-        # layers of the layer panel. A higher rendering pass is drawn later, so on top.
-        symbol.symbolLayer(0).setRenderingPass(len(CATEGORY_COLORS) - position)
         categories.append(QgsRendererCategory(category, symbol, tr(CATEGORY_LABELS[category])))
     renderer = QgsCategorizedSymbolRenderer("category", categories)
-    # The draw order is set by the class alone, nothing else.
-    renderer.setUsingSymbolLevels(True)
+    # The draw order is set by the class alone, in the order of the legend: the first class is
+    # drawn last, so it is on top, like the layers of the layer panel. The class is text, so it is
+    # turned into a rank first.
+    renderer.setOrderBy(QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause(RANK_EXPRESSION, True)]))
+    renderer.setOrderByEnabled(True)
     return renderer
 
 
