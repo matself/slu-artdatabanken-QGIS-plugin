@@ -35,7 +35,7 @@ Limits of this version: vascular plants only, Artportalen data only, no protecte
 
 - Data comes from SLU Artdatabanken's open WFS service. Using it is subject to their terms of use. Data providers may have different licences: see the `datasetName` field. The layer metadata states the source and the date of retrieval.
 - Personal data fields (`recordedBy`, `reportedBy`) are never downloaded.
-- The plugin sends one request per page of results and a few small requests when counting. It counts before downloading and refuses searches of 100 000 observations or more.
+- The plugin sends one request per page of 1 000 results, with a one-second pause between pages to be gentle on the database, and a few small requests when counting. It counts before downloading and refuses searches of 100 000 observations or more.
 
 ## Development
 

@@ -115,3 +115,25 @@ def test_year_colours_are_stable_and_differ_between_neighbouring_years():
     assert all(0 <= h < 1 for h in hues)
     gaps = [abs(hues[i] - hues[i + 1]) for i in range(len(hues) - 1)]
     assert min(min(g, 1 - g) for g in gaps) > 0.1
+
+
+def test_a_pause_is_waited_between_pages_but_not_after_the_last():
+    waited = []
+    collect(fake_fetch(2500, []), total=2500, page_size=1000, pause=1.0, sleep=waited.append)
+    assert round(sum(waited), 6) == 2.0  # three pages, two pauses
+
+
+def test_a_cancel_during_the_pause_is_noticed():
+    state = {"n": 0}
+
+    def cancelled():
+        state["n"] += 1
+        return state["n"] > 3
+
+    waited = []
+    try:
+        collect(fake_fetch(5000, []), total=5000, page_size=1000, is_cancelled=cancelled, pause=10.0,
+                sleep=waited.append)
+    except Exception as exc:
+        assert exc.__class__.__name__ == "CancelledError"
+    assert sum(waited) < 1.0

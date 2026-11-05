@@ -34,6 +34,7 @@ class SnapshotTask(QgsTask):
                 self._fetch_page,
                 self.total,
                 is_cancelled=self.isCanceled,
+                pause=snapshot.PAGE_PAUSE_SECONDS,
                 on_progress=lambda done, total: self.setProgress(100 * done / total),
             )
         except counting.CancelledError:
