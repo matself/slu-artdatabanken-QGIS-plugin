@@ -32,6 +32,12 @@ Open. Needs an API key.
 - Protected observations need a SLU UserAdmin login and permission. The plugin does not handle them (unchanged decision).
 - This is a mail reply, not yet a formal written approval under 5.3/5.6 of the terms. Ask whether it is enough to publish.
 
+## Follow-up reply from SLU (2026-11-05)
+- A shared API key is not possible: the plugin is open source and a shared key could be used in other contexts. Each user needs their own key for the REST API. SLU welcomes a more detailed instruction than the short one at github.com/biodiversitydata-se/SOS. This only matters if the plugin gets a REST path; the WFS path needs no key.
+- The WFS needs no key and can still be used without one. Its limits come from the GeoServer Elasticsearch plugin (about 5000 observations per request, as in section 6). SLU would rather see the REST API used, since its paging is gentler on the database.
+- SLU asks for the presentation and a link to the plugin and will ask internally whether anyone can test it.
+- Nothing in the code changes because of this reply: the plugin stays on the WFS, counts first, pages 1000 at a time, confirms above 2 000 and refuses above 100 000 observations. Open question: a pause between pages, and an optional REST path with the user's own key.
+
 ## 7. QGIS OAuth2 with PKCE
 Not applicable. The plugin will never handle protected observations (decision 2026-10-24).
 
