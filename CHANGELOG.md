@@ -4,7 +4,7 @@ All notable changes to Species Data (SLU Artdatabanken). The same entries, short
 
 ## Unreleased
 - A species name in the search now also finds its subspecies, varieties and forms, like the search page of SLU Artdatabanken. A Swedish species name is looked up to its scientific name for the same reason. Hybrids are not included.
-- The Localities tab groups subspecies, varieties and forms under their species.
+- The Localities tab groups subspecies, varieties and forms under their species, and the new field `taxa` lists the names in each locality with their number of observations.
 
 ## 1.0.1 - 2026-11-05
 - Security scan fix: XML escaping uses `html.escape` instead of `xml.sax.saxutils.escape`. The output is the same and the plugin parses no XML. The scanner on plugins.qgis.org flagged the old import (Bandit B406, low severity).

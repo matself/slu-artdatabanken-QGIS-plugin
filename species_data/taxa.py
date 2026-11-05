@@ -13,6 +13,19 @@ _BELOW_SPECIES = re.compile(
 _HYBRID_SIGNS = ("\u00d7", " x ")
 
 
+def summary(names: list) -> str:
+    """The names and how many observations carry each, most frequent first, for example
+    ``Pulsatilla vulgaris (12); Pulsatilla vulgaris subsp. vulgaris (30)``.
+
+    Shown per locality, so the user can see what was folded into the species.
+    """
+    counts = {}
+    for name in names:
+        counts[name] = counts.get(name, 0) + 1
+    ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    return "; ".join(f"{name} ({n})" for name, n in ordered)
+
+
 def species_name(scientific_name: str) -> str:
     """The species of a scientific name: ``Pulsatilla vulgaris subsp. vulgaris`` gives
     ``Pulsatilla vulgaris``.

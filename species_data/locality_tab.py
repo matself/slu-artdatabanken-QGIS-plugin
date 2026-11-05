@@ -346,6 +346,7 @@ class LocalityTab(QWidget):
         has_present = "isPresentObservation" in names
         by_species = {}
         self._fids = {}  # feature ids, in the same order as the points of each species
+        self._taxa = {}  # the scientific names, in the same order too
         chosen = self._chosen()
         for feature in layer.getFeatures():
             geometry = feature.geometry()
@@ -366,6 +367,7 @@ class LocalityTab(QWidget):
                 clustering.Point(point.x(), point.y(), year, uncertainty, not_refound)
             )
             self._fids.setdefault(species, []).append(feature.id())
+            self._taxa.setdefault(species, []).append(feature["scientificName"] or species)
         return by_species
 
     def _params(self) -> clustering.Params:
@@ -411,7 +413,7 @@ class LocalityTab(QWidget):
 
     def _done(self, results):
         params = self._params_used
-        layer = build_layer(results, self._source, params, self._subset)
+        layer = build_layer(results, self._source, params, self._subset, self._taxa)
         self._finished()
         QgsProject.instance().addMapLayer(layer)
         written = ""
@@ -488,14 +490,16 @@ def write_locality_ids(layer, numbers: dict):
     layer.triggerRepaint()
 
 
-def build_layer(results: dict, source, params: clustering.Params, subset: bool = False):
+def build_layer(results: dict, source, params: clustering.Params, subset: bool = False, names: dict = None):
     """A temporary layer with one point per locality.
 
     ``subset`` is true when only some of the species of ``source`` were grouped; the layer is
-    then named after them instead of after the source.
+    then named after them instead of after the source. ``names`` holds, per species, the
+    scientific name of each observation (in the order of the points) for the field ``taxa``.
     """
-    names = ", ".join(sorted(results))
-    name = f"{names}: localities" if subset else f"{source.name()}: localities"
+    names = names or {}
+    species_names = ", ".join(sorted(results))
+    name = f"{species_names}: localities" if subset else f"{source.name()}: localities"
     layer = QgsVectorLayer(f"Point?crs={CRS}", name, "memory")
     fields = (
         ("species", QMetaType.Type.QString),
@@ -507,6 +511,7 @@ def build_layer(results: dict, source, params: clustering.Params, subset: bool =
         ("last_year", QMetaType.Type.Int),
         ("radius_m", QMetaType.Type.Int),
         ("n_not_refound", QMetaType.Type.Int),
+        ("taxa", QMetaType.Type.QString),
     )
     layer.dataProvider().addAttributes([QgsField(name, kind) for name, kind in fields])
     layer.updateFields()
@@ -518,7 +523,8 @@ def build_layer(results: dict, source, params: clustering.Params, subset: bool =
             feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(loc.x, loc.y)))
             feature.setAttributes(
                 [species, offsets[species] + loc.id, loc.category, loc.count, len(loc.years), loc.first_year,
-                 loc.last_year, round(loc.radius), loc.not_refound_count]
+                 loc.last_year, round(loc.radius), loc.not_refound_count,
+                 taxa.summary([names[species][m] for m in loc.members]) if species in names else species]
             )
             features.append(feature)
     layer.dataProvider().addFeatures(features)

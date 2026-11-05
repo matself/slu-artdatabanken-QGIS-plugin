@@ -57,6 +57,7 @@ Noggrannheten vidgar alltså varje fynds räckvidd med sin egen radie. Två fynd
 
 - **Centrum:** medelpunkten av fynden viktad med 1 / (1 + U_i), så att exakta fynd drar mer än vaga (saknat U_i räknas som U_max).
 - **Radie:** största avståndet från centrum till ett fynds läge. Fyndens egen noggrannhet läggs inte till.
+- **Namn:** fältet `taxa` listar de vetenskapliga namn som ingår i lokalen och antalet fynd med varje namn (underarter räknas till arten, se avsnitt 2), så att det syns vad som slagits ihop.
 - **Antal fynd, årtal, första och sista år.**
 - **Klass:** se avsnitt 4.
 - **Numrering:** lokalerna numreras efter minsta x- och sedan y-koordinat bland sina fynd.
@@ -131,4 +132,4 @@ Idén att gruppera fynd efter avstånd och koordinatnoggrannhet har tidigare anv
 | 2026-10-29 | 0.2.0 | Första beskrivningen. Enkellänkning med noggrannhet, brygg-regel för vaga fynd, delning av kedjor, storleksval, deterministisk ordning. |
 | 2026-11-05 | 1.0.0 | Ingen ändring i metoden. |
 | 2026-11-05 | 1.0.1 | Ingen ändring i metoden. |
-| 2026-11-05 | opublicerad | Namn under artnivå räknas till arten vid grupperingen, och artsökningen tar med underarter. |
+| 2026-11-05 | opublicerad | Namn under artnivå räknas till arten vid grupperingen, och artsökningen tar med underarter. Fältet `taxa` visar vilka namn som ingår i varje lokal. |

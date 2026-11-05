@@ -1,5 +1,5 @@
 """Names below a species are folded into it. No QGIS needed."""
-from species_data.taxa import species_name
+from species_data.taxa import species_name, summary
 
 
 def test_a_subspecies_is_folded_into_its_species():
@@ -27,3 +27,13 @@ def test_a_hybrid_is_kept_whole():
 
 def test_extra_spaces_are_ignored():
     assert species_name("  Pulsatilla  vulgaris  subsp.  vulgaris ") == "Pulsatilla vulgaris"
+
+
+def test_summary_counts_each_name_most_frequent_first():
+    names = ["Pulsatilla vulgaris subsp. vulgaris"] * 3 + ["Pulsatilla vulgaris"] * 2
+    assert summary(names) == "Pulsatilla vulgaris subsp. vulgaris (3); Pulsatilla vulgaris (2)"
+
+
+def test_summary_of_equal_counts_is_alphabetical_and_of_nothing_is_empty():
+    assert summary(["b", "a"]) == "a (1); b (1)"
+    assert summary([]) == ""
