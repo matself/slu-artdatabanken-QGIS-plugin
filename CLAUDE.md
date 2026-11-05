@@ -20,3 +20,7 @@ Regler:
 ## Metodbeskrivningar
 
 `docs/metod-lokaler.md` och `docs/metod-samvariation.md` beskriver metoderna vetenskapligt och ska hållas i takt med koden. Ändrar du algoritmen, standardvärden, klassregler, storleksval eller hur resultatet visas ska du i samma commit uppdatera texten, raden "Gäller pluginversion", den maskinläsbara raden `<!-- defaults: ... -->` och ändringshistoriken längst ned. Beskriv bara det koden faktiskt gör, och skriv inte in valideringar som inte har gjorts.
+
+## Changelog
+
+`CHANGELOG.md` och nyckeln `changelog` i `species_data/metadata.txt` ska ha samma poster. Varje ny version får en post i båda, i samma commit som versionshöjningen.

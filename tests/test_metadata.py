@@ -45,3 +45,8 @@ def test_the_version_sent_to_the_service_is_the_one_in_metadata():
 
     assert provenance.plugin_version() != "unknown"
     assert provenance.plugin_version().count(".") == 2
+
+
+def test_the_changelog_file_has_an_entry_for_the_current_version():
+    text = (PLUGIN_DIR.parent / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert f"## {read_metadata()['version']} - " in text
