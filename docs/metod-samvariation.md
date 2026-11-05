@@ -90,7 +90,8 @@ Storleksvalen är pragmatiska och inte härledda ur någon art eller något habi
 4. **Frånvaro.** Att en art inte rapporterats från en plats betyder inte att den saknas där. Samvariation som uteblir kan bero på att någon inte rapporterat.
 5. **Kedjor.** Enkellänkning kan binda ihop lokaler över längre avstånd än G via mellanliggande lokaler. R_max dämpar det, men delningen följer inga naturliga gränser.
 6. **Tiden.** Fynd från olika decennier kan ge en plats trots att arterna aldrig funnits där samtidigt, och en plats kan försvinna som förekomst. Alternativet *Bara aktuella lokaler* och kolumnerna för första och sista år hjälper att bedöma det, men metoden avgör det inte.
-7. **Valet av arter** avgör vad som visas. En vanlig art tillsammans med en sällsynt ger främst information om den sällsynta artens lokaler.
+7. **Underarter är sammanslagna med arten.** Lokalerna bygger på artnivån, så en art kan räknas som närvarande på en plats där bara en av dess underarter har rapporterats. För arter vars underarter är skilda taxa med olika krav kan det ge en missvisande bild av samvariationen. Se avsnitt 8 i [metod-lokaler.md](metod-lokaler.md).
+8. **Valet av arter** avgör vad som visas. En vanlig art tillsammans med en sällsynt ger främst information om den sällsynta artens lokaler.
 
 ## 8. Kontroll av metoden
 

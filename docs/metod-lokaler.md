@@ -113,7 +113,8 @@ I en orienterande körning på hämtade data delades ungefär 40 % av paren av �
 4. **Skalberoende.** Resultatet beror på L, B och R_max. Det finns ingen "rätt" lokalstorlek. Samma fynd ger fler och mindre lokaler vid Strikt och färre och större vid Generös.
 5. **Kedjor.** Enkellänkning kan koppla ihop avlägsna fynd via mellanliggande. Brygg-regeln för vaga fynd och R_max dämpar det men tar inte bort det.
 6. **Taxonomi och datum.** Se avsnitt 2.
-7. **Skyddade fynd** ingår inte i den öppna tjänsten, så platser med skyddade arter kan saknas helt.
+7. **Underarter räknas till arten.** Ett fynd bestämt till en underart, varietet eller form grupperas med artens övriga fynd. Det är försvarbart för att avgränsa var arten har rapporterats, eftersom samma förekomst ofta rapporteras på art- och underartsnivå av olika rapportörer. Men det döljer skillnader mellan underarter som är skilda taxa med egen ekologi eller utbredning, och rapportfrekvensen kan skilja mycket mellan art- och underartsnivå, vilket påverkar antal fynd, antal år och klassen. En del underarter har inte heller varit erkända alla år, så äldre fynd ligger på artnivå. Resultatet är en sammanfattning av rapporter för arten som helhet, och tolkningen är användarens.
+8. **Skyddade fynd** ingår inte i den öppna tjänsten, så platser med skyddade arter kan saknas helt.
 
 ## 9. Kontroll av metoden
 
