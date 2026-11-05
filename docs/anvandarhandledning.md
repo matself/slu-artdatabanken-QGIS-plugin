@@ -159,7 +159,7 @@ Under *Avancerat* ställer du in största avstånd mellan lokaler, största plat
 - Personuppgiftsfälten `recordedBy` och `reportedBy` hämtas aldrig.
 - Dataset kan ha olika licens. Se fältet `datasetName`, som alltid följer med.
 - Fritext i anmärkningar kan innehålla personuppgifter, och hämtas bara om du själv kryssar i det.
-- Vid sökning skickas ungefär 20 till 30 små anrop för att räkna, och sedan ett anrop per 1 000 fynd. Anropen identifierar sig med huvudet `X-Requesting-System`. Pluginet sparar ingen användardata och skickar ingenting annat än sökningen till tjänsten.
+- Vid sökning skickas ungefär 20 till 30 små anrop för att räkna, och sedan ett anrop per 1 000 fynd, med en sekunds paus mellan sidorna för att vara snäll mot databasen. Anropen identifierar sig med huvudet `X-Requesting-System`. Pluginet sparar ingen användardata och skickar ingenting annat än sökningen till tjänsten.
 
 ## 7. Tips
 
