@@ -14,7 +14,6 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsFeature,
-    QgsFeatureRequest,
     QgsField,
     QgsGeometry,
     QgsLayerMetadata,
@@ -587,11 +586,8 @@ def _renderer():
         symbol.symbolLayer(0).setRenderingPass(len(CATEGORY_COLORS) - position)
         categories.append(QgsRendererCategory(category, symbol, tr(CATEGORY_LABELS[category])))
     renderer = QgsCategorizedSymbolRenderer("category", categories)
+    # The draw order is set by the class alone, nothing else.
     renderer.setUsingSymbolLevels(True)
-    # Within a class, large localities are drawn first so small ones stay visible on top of them.
-    order = QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause('"n_observations"', False)])
-    renderer.setOrderBy(order)
-    renderer.setOrderByEnabled(True)
     return renderer
 
 
