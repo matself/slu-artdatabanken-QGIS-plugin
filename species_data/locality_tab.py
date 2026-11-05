@@ -564,7 +564,7 @@ FILL_ALPHA = 200  # about 80 %, so the colours still show on a grey base map
 
 def _renderer():
     categories = []
-    for category, color in CATEGORY_COLORS.items():
+    for position, (category, color) in enumerate(CATEGORY_COLORS.items()):
         base = QColor(color)
         fill = QColor(base)
         fill.setAlpha(FILL_ALPHA)
@@ -582,9 +582,13 @@ def _renderer():
         symbol.symbolLayer(0).setDataDefinedProperty(
             QgsSymbolLayer.Property.Size, QgsProperty.fromExpression(SIZE_EXPRESSION)
         )
+        # The classes are drawn in the order of the legend: the first is on top, like the
+        # layers of the layer panel. A higher rendering pass is drawn later, so on top.
+        symbol.symbolLayer(0).setRenderingPass(len(CATEGORY_COLORS) - position)
         categories.append(QgsRendererCategory(category, symbol, tr(CATEGORY_LABELS[category])))
     renderer = QgsCategorizedSymbolRenderer("category", categories)
-    # Large localities are drawn first so small ones stay visible on top of them.
+    renderer.setUsingSymbolLevels(True)
+    # Within a class, large localities are drawn first so small ones stay visible on top of them.
     order = QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause('"n_observations"', False)])
     renderer.setOrderBy(order)
     renderer.setOrderByEnabled(True)
