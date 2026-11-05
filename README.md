@@ -31,6 +31,13 @@ The settings of a result are stored in its layer metadata, so a result can be re
 
 Limits of this version: vascular plants only, Artportalen data only, no protected (sensitive) observations, no API key needed.
 
+## Documentation
+
+- [CHANGELOG.md](CHANGELOG.md): what changed in each version.
+- [docs/anvandarhandledning.md](docs/anvandarhandledning.md): user guide (Swedish).
+- [docs/metod-lokaler.md](docs/metod-lokaler.md) and [docs/metod-samvariation.md](docs/metod-samvariation.md): how localities and co-occurrence are computed, with assumptions and limitations (Swedish).
+- [docs/findings.md](docs/findings.md): what was found out about the services.
+
 ## Data, personal data and terms
 
 - Data comes from SLU Artdatabanken's open WFS service. Using it is subject to their terms of use. Data providers may have different licences: see the `datasetName` field. The layer metadata states the source and the date of retrieval.
@@ -74,6 +81,9 @@ Layout:
 - `counting.py`, `net.py`: counting by probing, since `resultType=hits` does not work on the service.
 - `snapshot.py`, `download.py`: the field selection and the paged background download.
 - `layers.py`, `styles.py`, `provenance.py`: the temporary layer, its style, and the source metadata.
+- `clustering.py`, `locality_tab.py`: grouping observations into localities (no QGIS imports in `clustering.py`).
+- `cooccurrence.py`, `cooccurrence_tab.py`: places where several species have been reported from the same place.
+- `settings.py`, `settings_widgets.py`, `source_check.py`: size presets and stored settings, and the check that a layer comes from this plugin.
 - `dockwidget.py`, `plugin.py`: the panel and the plugin class.
 - `docs/`: findings about the services (`findings.md`), the Fynddata reference, the sent support mail, the API specification and a log of sources (`SOURCES.md`).
 
