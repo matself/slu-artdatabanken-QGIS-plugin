@@ -16,10 +16,21 @@ Skrivet 2026-11-05 som förberedelse för en senare version. Inget av detta är 
   | Alla leverantörer | 2 510 |
   | Artportalen (1) | 2 063 |
   | iNaturalist (19) | 197 |
-  | Övriga leverantörer (skillnaden) | cirka 250 |
+  | Övriga leverantörer (skillnaden) | cirka 250 (Virtuella Herbariet, se nedan) |
 
   På inaturalist.org själv gav samma art 245 fynd i Skåne enligt användarens egen sökning, och SLU:s söksida gav 2 058. iNaturalist tillför alltså ungefär 9 % utöver Artportalen för en art där människor ofta rapporterar, och SOS har färre iNaturalist-fynd (197) än iNaturalists egen sökning (245). Skillnaden kan bero på urval, licens eller tidpunkt och är inte utredd. Slutsats: iNaturalist tillför lite, och spåret har låg prioritet.
-- **Det finns fler leverantörer än de två.** Differensen på cirka 250 fynd visar att andra leverantörer än Artportalen och iNaturalist har fynd av samma art. Pluginet söker i dag bara i Artportalen, så de ingår inte. Vilka de är är inte utrett, och det går att ta reda på med en lista över leverantörer (nyckel) eller genom att fråga SLU.
+- **De övriga cirka 250 fynden är Virtuella Herbariet.** Fördelningen per `dataProviderId` för backsippa (fynd av förekomst, samma sökning, 2026-11-05):
+
+  | Leverantör | Skåne | Hela Sverige |
+  |---|---|---|
+  | Artportalen (1) | 2 063 | 10 794 |
+  | Virtuella Herbariet (7) | 250 | 1 024 |
+  | iNaturalist (19) | 197 | 668 |
+  | Summa | 2 510 | 12 486 |
+
+  Virtuella Herbariet är herbariebelägg, alltså samlade exemplar och inte rapporterade observationer, och de är ofta gamla och har grova lokaluppgifter. Det är en annan sorts källa än Artportalen och kan vara mer intressant än iNaturalist för historiska lokaler. Pluginet söker i dag bara i Artportalen, så de ingår inte.
+- **Leverantörerna i Fynddata.** SLU:s söksida listar 26 datasets. De som kan ha kärlväxter är Artportalen, Virtuella Herbariet, Riksskogstaxeringen (vegetationsförekomst, även upphörda provytor), Nationell ängs- och betesmarksinventering (TUVA), Nationella inventeringar av landskapet i Sverige (NILS), Observationsdatabasen, Biologg, iNaturalist Sverige, samlingar från Göteborgs naturhistoriska museum och Lunds universitets biologiska museum. Övriga gäller fåglar, fisk, havsmiljö, insekter, tumlare och liknande: Databasen för provfiske vid kusten (KUL), Miljödata MVM, Nationellt register över sjöprovfisken (NORS), Svenskt elfiskeregister (SERS), SHARK, Ringmärkningscentralen, Entomologiska samlingarna (NHRS), Svenska malaisefälleprojektet (SMTP), Tumlareobservationsdatabasen, Svensk dagfjärilsövervakning, Svensk fågeltaxering (fyra program), GDP Häckande kustfåglar i Bottniska viken och Kusttrålning. Bara id 1, 7 och 19 är kontrollerade. Id:n för de andra är okända.
+- **Siffran 5 988.** Användaren fick 5 988 fynd av backsippa med alla datasets i Fynddata. Det stämmer inte med något av mina tal för hela Sverige (12 486 alla leverantörer, 10 794 Artportalen). Jag vet inte vilket urval som användes (område, period, verifierade, osäkra artbestämningar med mera) och har inte kunnat återskapa talet. Skåne-talet 2 058 mot mina 2 063 för Artportalen stämde däremot.
 
 ### Ej kontrollerat
 - Om iNaturalist-fynd i tjänsten är dubbletter av Artportalens fynd (samma fynd i båda). Det måste frågas SLU om.
