@@ -6,8 +6,8 @@ network dependencies so it can be unit tested anywhere.
 """
 from dataclasses import dataclass
 from datetime import date
+from html import escape
 from typing import Optional
-from xml.sax.saxutils import escape
 
 # Paging on the WFS works up to this start index. One request returns at most 5000
 # features and reports that as ``numberMatched`` even when more exist, so that number is
@@ -196,7 +196,7 @@ def _prop(field: str) -> str:
 
 
 def _lit(value) -> str:
-    return f"<ogc:Literal>{escape(str(value))}</ogc:Literal>"
+    return f"<ogc:Literal>{escape(str(value), quote=False)}</ogc:Literal>"
 
 
 def _eq(field: str, value) -> str:
