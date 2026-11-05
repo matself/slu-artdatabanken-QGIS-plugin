@@ -1,5 +1,7 @@
 """Source and query description stored in the layer metadata (no QGIS imports)."""
+import configparser
 from datetime import datetime
+from pathlib import Path
 
 from .counting import Count
 from .query import Query
@@ -9,6 +11,13 @@ DISCLAIMER = (
     "Created with the independent plugin Species Data (SLU Artdatabanken). "
     "The plugin is not developed, owned or endorsed by SLU."
 )
+
+
+def plugin_version() -> str:
+    """The version in metadata.txt, so it is stated in one place only."""
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read(Path(__file__).with_name("metadata.txt"), encoding="utf-8")
+    return parser.get("general", "version", fallback="unknown")
 
 
 def citation(retrieved: datetime) -> str:

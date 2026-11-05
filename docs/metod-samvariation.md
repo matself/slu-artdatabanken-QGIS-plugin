@@ -1,6 +1,6 @@
 # Metod: hur samvariation mellan arter beräknas
 
-Gäller pluginversion 0.2.0. Senast uppdaterad 2026-10-29. Koden finns i `species_data/cooccurrence.py`, och inställningarna i `species_data/settings.py` och `species_data/cooccurrence_tab.py`. Metoden bygger på lokalerna som beskrivs i [metod-lokaler.md](metod-lokaler.md).
+Gäller pluginversion 1.0.0. Senast uppdaterad 2026-11-05. Koden finns i `species_data/cooccurrence.py`, och inställningarna i `species_data/settings.py` och `species_data/cooccurrence_tab.py`. Metoden bygger på lokalerna som beskrivs i [metod-lokaler.md](metod-lokaler.md).
 
 <!-- defaults: max_gap=150 max_radius=300 only_current=false count_not_refound=false core_share=0.9 place_gap_factor=1.5 place_radius_factor=3 -->
 
@@ -103,3 +103,4 @@ Storleksvalen är pragmatiska och inte härledda ur någon art eller något habi
 | Datum | Pluginversion | Ändring i metoden |
 |---|---|---|
 | 2026-10-29 | 0.2.0 | Första beskrivningen. Platser av lokaler med enkellänkning, delning vid största platsradie, platsstorlek med G = 1,5 s och R_max = 3 s, radie för 90 % av fynden, punkter och värmekarta. |
+| 2026-11-05 | 1.0.0 | Ingen ändring i metoden. |

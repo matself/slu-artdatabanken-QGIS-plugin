@@ -38,3 +38,10 @@ def test_icon_exists():
 
 def test_license_file_exists():
     assert (PLUGIN_DIR.parent / "LICENSE").exists()
+
+
+def test_the_version_sent_to_the_service_is_the_one_in_metadata():
+    from species_data import provenance
+
+    assert provenance.plugin_version() != "unknown"
+    assert provenance.plugin_version().count(".") == 2

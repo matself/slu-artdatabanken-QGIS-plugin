@@ -1,6 +1,6 @@
 # Metod: hur fynd grupperas till lokaler
 
-Gäller pluginversion 0.2.0. Senast uppdaterad 2026-10-29. Koden finns i `species_data/clustering.py`, och inställningarna i `species_data/settings.py` och `species_data/locality_tab.py`.
+Gäller pluginversion 1.0.0. Senast uppdaterad 2026-11-05. Koden finns i `species_data/clustering.py`, och inställningarna i `species_data/settings.py` och `species_data/locality_tab.py`.
 
 <!-- defaults: link_distance=100 uncertainty_weight=1 max_uncertainty=500 bridge_uncertainty=100 max_radius=100 recent_years=5 historical_years=15 strong_min_years=5 presets=50,100,200 -->
 
@@ -128,3 +128,4 @@ Idén att gruppera fynd efter avstånd och koordinatnoggrannhet har tidigare anv
 | Datum | Pluginversion | Ändring i metoden |
 |---|---|---|
 | 2026-10-29 | 0.2.0 | Första beskrivningen. Enkellänkning med noggrannhet, brygg-regel för vaga fynd, delning av kedjor, storleksval, deterministisk ordning. |
+| 2026-11-05 | 1.0.0 | Ingen ändring i metoden. |

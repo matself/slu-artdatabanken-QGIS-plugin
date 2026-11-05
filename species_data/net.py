@@ -6,6 +6,7 @@ from qgis.core import QgsBlockingNetworkRequest, QgsFeedback
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 
+from . import provenance
 from .counting import CancelledError, Probe
 from .query import BOTH, Query
 from .wfs import WFS_URL, request_params
@@ -15,7 +16,7 @@ GENUS_CATEGORY = "Släkte"
 
 
 # Identifies the client to the service, as SLU Artdatabanken asks API users to do.
-REQUESTING_SYSTEM = b"QGIS plugin Species Data (SLU Artdatabanken) 0.1.0"
+REQUESTING_SYSTEM = f"QGIS plugin Species Data (SLU Artdatabanken) {provenance.plugin_version()}".encode("ascii")
 
 
 class NetworkError(RuntimeError):
