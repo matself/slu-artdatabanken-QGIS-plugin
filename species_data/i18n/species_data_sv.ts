@@ -390,8 +390,8 @@
 (till exempel: vitsippa)</translation>
     </message>
     <message>
-      <source>A genus name (for example Anemone) includes all its species.</source>
-      <translation>Ett släktnamn (till exempel Anemone) omfattar alla arter i släktet.</translation>
+      <source>A genus name (for example Anemone) includes all its species, and a species name includes its subspecies.</source>
+      <translation>Ett släktnamn (till exempel Anemone) omfattar alla dess arter, och ett artnamn omfattar dess underarter.</translation>
     </message>
     <message>
       <source>All species (no name filter)</source>
@@ -522,10 +522,6 @@
       <translation>Standardfälten ingår alltid.</translation>
     </message>
     <message>
-      <source>{name} is the genus {genus}: all its species are included.</source>
-      <translation>{name} är släktet {genus}: alla dess arter ingår.</translation>
-    </message>
-    <message>
       <source>Species Data</source>
       <translation>Artdata</translation>
     </message>
@@ -548,6 +544,14 @@
     <message>
       <source>At least {n} observations: too many. Narrow the search.</source>
       <translation>Minst {n} fynd: för många. Avgränsa sökningen.</translation>
+    </message>
+    <message>
+      <source>{name} is {genus}: its subspecies are included.</source>
+      <translation>{name} är {genus}: dess underarter ingår.</translation>
+    </message>
+    <message>
+      <source>{name} is the genus {genus}: all its species are included.</source>
+      <translation>{name} är släktet {genus}: alla dess arter ingår.</translation>
     </message>
     <message>
       <source>The layer could not be created.</source>

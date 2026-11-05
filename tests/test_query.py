@@ -94,13 +94,18 @@ def test_sp_and_wildcards_are_plain_text_not_special():
     assert like_terms(names_query("Anemone sp.")) == [
         ("scientificName", "Anemone sp.", "false"),
         ("vernacularName", "Anemone sp.", "false"),
+        ("scientificName", "Anemone sp. *", "false"),
     ]
     star = [v for f, v, _ in like_terms(names_query("anem*")) if f == "scientificName"]
     assert star == ["anem\\*", "anem\\* *"]
 
 
-def test_a_species_name_gets_no_genus_terms():
-    assert len(like_terms(names_query("Anemone nemorosa"))) == 2
+def test_a_species_name_also_matches_the_taxa_below_it():
+    likes = like_terms(names_query("Pulsatilla vulgaris"))
+    assert ("scientificName", "Pulsatilla vulgaris", "false") in likes
+    assert ("scientificName", "Pulsatilla vulgaris *", "false") in likes  # subsp., var., f.
+    assert ("vernacularName", "Pulsatilla vulgaris", "false") in likes
+    assert len(likes) == 3
 
 
 def test_taxon_ids_become_or_of_equals():

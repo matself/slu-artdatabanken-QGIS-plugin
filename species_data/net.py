@@ -13,6 +13,7 @@ from .wfs import WFS_URL, request_params
 
 # The value of ``taxonCategory`` for genus level taxa, spelled as the service does.
 GENUS_CATEGORY = "Släkte"
+SPECIES_CATEGORY = "Art"
 
 
 # Identifies the client to the service, as SLU Artdatabanken asks API users to do.
@@ -65,6 +66,20 @@ def genus_for_swedish_name(name: str, organism_group, is_cancelled=lambda: False
     level, which carry the Swedish name of the genus. A genus without such observations
     cannot be resolved here.
     """
+    return _scientific_for_swedish_name(name, organism_group, GENUS_CATEGORY, is_cancelled, feedback)
+
+
+def species_for_swedish_name(name: str, organism_group, is_cancelled=lambda: False, feedback=None):
+    """The scientific name when ``name`` is the Swedish name of a species (for example
+    "backsippa" gives "Pulsatilla vulgaris"), else None.
+
+    The subspecies of a species have Swedish names of their own ("vanlig backsippa"), so a
+    Swedish name alone would miss them. The scientific name also finds them.
+    """
+    return _scientific_for_swedish_name(name, organism_group, SPECIES_CATEGORY, is_cancelled, feedback)
+
+
+def _scientific_for_swedish_name(name, organism_group, category, is_cancelled, feedback):
     probe = Query(organism_group=organism_group, names=(name,), occurrence=BOTH)
     names = ("scientificName", "vernacularName", "taxonCategory")
     params = request_params(probe, max_features=20, fields=names)
@@ -85,6 +100,6 @@ def genus_for_swedish_name(name: str, organism_group, is_cancelled=lambda: False
     for feature in features:
         props = feature.get("properties", {})
         same_name = (props.get("vernacularName") or "").lower() == name.lower()
-        if props.get("taxonCategory") == GENUS_CATEGORY and same_name:
+        if props.get("taxonCategory") == category and same_name:
             return props.get("scientificName")
     return None

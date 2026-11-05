@@ -5,7 +5,13 @@ from urllib.parse import urlencode
 from qgis.core import QgsBlockingNetworkRequest, QgsFeedback, QgsTask
 
 from . import counting, snapshot
-from .net import NetworkError, feature_probe, genus_for_swedish_name, new_request
+from .net import (
+    NetworkError,
+    feature_probe,
+    genus_for_swedish_name,
+    new_request,
+    species_for_swedish_name,
+)
 from .query import BOTH, Query
 from .wfs import WFS_URL, request_params
 
@@ -88,15 +94,24 @@ class CountTask(QgsTask):
         super().cancel()
 
     def _resolve_aliases(self):
-        """Swedish genus names (one word starting with a lower case letter) mapped to the genus."""
+        """Swedish names (starting with a lower case letter) mapped to the scientific name.
+
+        A one word name is tried as a genus first, then any name as a species.
+        """
         for name in self.query.names:
-            if " " in name or not name[:1].islower():
+            if not name[:1].islower():
                 continue
-            genus = genus_for_swedish_name(
-                name, self.query.organism_group, self.isCanceled, self._feedback
-            )
-            if genus:
-                self._aliases[name] = genus
+            found = None
+            if " " not in name:
+                found = genus_for_swedish_name(
+                    name, self.query.organism_group, self.isCanceled, self._feedback
+                )
+            if not found:
+                found = species_for_swedish_name(
+                    name, self.query.organism_group, self.isCanceled, self._feedback
+                )
+            if found:
+                self._aliases[name] = found
 
     def _name_exists(self, name):
         """Is the name in the data at all, ignoring area, period and the other filters?"""

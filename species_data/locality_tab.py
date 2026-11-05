@@ -46,7 +46,7 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from . import clustering, provenance, settings, source_check
+from . import clustering, provenance, settings, source_check, taxa
 from .settings_widgets import StoredSettingsRow, remember, remembered
 from .wfs import CRS
 
@@ -305,9 +305,8 @@ class LocalityTab(QWidget):
         self.species_list.blockSignals(True)
         self.species_list.clear()
         if layer is not None:
-            names = sorted(
-                {v or tr("(no name)") for v in layer.uniqueValues(layer.fields().indexOf("scientificName"))}
-            )
+            column = layer.fields().indexOf("scientificName")
+            names = sorted({taxa.species_name(v) if v else tr("(no name)") for v in layer.uniqueValues(column)})
             for name in names:
                 item = QListWidgetItem(name)
                 item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
@@ -352,7 +351,8 @@ class LocalityTab(QWidget):
             geometry = feature.geometry()
             if geometry.isNull():
                 continue
-            if chosen is not None and (feature["scientificName"] or tr("(no name)")) not in chosen:
+            species = taxa.species_name(feature["scientificName"]) if feature["scientificName"] else tr("(no name)")
+            if chosen is not None and species not in chosen:
                 continue
             not_refound = bool(has_flag and feature["isNotRediscoveredObservation"] is True)
             if has_present and feature["isPresentObservation"] is False and not not_refound:
@@ -362,7 +362,6 @@ class LocalityTab(QWidget):
             year = end.year() if hasattr(end, "year") and end.isValid() else None
             uncertainty = feature["coordinateUncertaintyInMeters"]
             uncertainty = uncertainty if isinstance(uncertainty, (int, float)) else None
-            species = feature["scientificName"] or tr("(no name)")
             by_species.setdefault(species, []).append(
                 clustering.Point(point.x(), point.y(), year, uncertainty, not_refound)
             )

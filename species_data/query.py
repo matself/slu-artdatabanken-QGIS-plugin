@@ -211,15 +211,19 @@ def name_terms(name: str) -> list:
     """OGC terms matching one name typed by the user (case-insensitive, no wildcards).
 
     - one word (``Anemone``): the genus, that is observations identified only to genus
-      plus every ``Anemone <species>`` (hybrids and subspecies included), and also a
-      Swedish name that is exactly that word
-    - two or more words (``Anemone nemorosa``): exact scientific or Swedish name
+      plus every ``Anemone <species>`` (subspecies included), and also a Swedish name
+      that is exactly that word
+    - two or more words (``Anemone nemorosa``): exact scientific or Swedish name, and
+      also the infraspecific taxa below it (``Anemone nemorosa subsp. x``, varieties and
+      forms), which the service stores under their own names. Hybrids that only name the
+      species as one parent are not matched.
     """
     text = " ".join(name.split())
-    terms = [_like("scientificName", text), _like("vernacularName", text)]
-    if " " not in text:
-        terms.append(_like("scientificName", text, True))
-    return terms
+    return [
+        _like("scientificName", text),
+        _like("vernacularName", text),
+        _like("scientificName", text, True),
+    ]
 
 
 def _like(field: str, value: str, any_species: bool = False) -> str:

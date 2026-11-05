@@ -250,7 +250,12 @@ class SpeciesDataDockWidget(QDockWidget):
             tr("One species name per line, scientific or Swedish\n(for example: vitsippa)")
         )
         form.addWidget(scope)
-        hint = QLabel(tr("A genus name (for example Anemone) includes all its species."))
+        hint = QLabel(
+            tr(
+                "A genus name (for example Anemone) includes all its species, "
+                "and a species name includes its subspecies."
+            )
+        )
         hint.setWordWrap(True)
         form.addWidget(hint)
         self.all_species = QCheckBox(tr("All species (no name filter)"))
@@ -419,10 +424,13 @@ class SpeciesDataDockWidget(QDockWidget):
             ).format(n=number, w=WARN_THRESHOLD)
         else:
             text = tr("About {n} observations.").format(n=number)
-        for typed, genus in self._aliases.items():
+        for typed, scientific in self._aliases.items():
             if typed in self.names.toPlainText().split("\n"):
-                note = tr("{name} is the genus {genus}: all its species are included.")
-                text += "\n" + note.format(name=typed, genus=genus)
+                if " " in scientific:
+                    note = tr("{name} is {genus}: its subspecies are included.")
+                else:
+                    note = tr("{name} is the genus {genus}: all its species are included.")
+                text += "\n" + note.format(name=typed, genus=scientific)
         if self._unknown:
             warning = tr("No vascular plant has the name: {names}. Check the spelling.")
             text += "\n" + warning.format(names=", ".join(self._unknown))

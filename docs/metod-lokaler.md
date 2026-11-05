@@ -29,7 +29,7 @@ Metoden läser ett fyndlager som hämtats med pluginet (eller sparats därifrån
 
 Konsekvenser som är värda att känna till:
 
-- Arten är det vetenskapliga namn som tjänsten levererar. Synonymer, underarter och namnbyten behandlas som olika arter om namnen skiljer sig.
+- Arten är det vetenskapliga namn som tjänsten levererar, men namn under artnivå (underart, varietet och form, till exempel *Pulsatilla vulgaris* subsp. *vulgaris*) räknas till sin art, så att fynden av en art grupperas tillsammans. Hybrider behålls under sitt eget namn. Synonymer och namnbyten behandlas som olika arter om namnen skiljer sig.
 - Ett fynd utan angiven noggrannhet behandlas som om det hade den största tillåtna noggrannheten (standard 500 m).
 - Fynd med angiven noggrannhet över gränsen U_max (standard 500 m) lämnas helt utanför. Antalet redovisas efter körningen. Det ger en selektion mot precisa fynd, se avsnitt 8.
 - Fynd utan datum bidrar till antal fynd men inte till årtal.
@@ -130,3 +130,4 @@ Idén att gruppera fynd efter avstånd och koordinatnoggrannhet har tidigare anv
 | 2026-10-29 | 0.2.0 | Första beskrivningen. Enkellänkning med noggrannhet, brygg-regel för vaga fynd, delning av kedjor, storleksval, deterministisk ordning. |
 | 2026-11-05 | 1.0.0 | Ingen ändring i metoden. |
 | 2026-11-05 | 1.0.1 | Ingen ändring i metoden. |
+| 2026-11-05 | opublicerad | Namn under artnivå räknas till arten vid grupperingen, och artsökningen tar med underarter. |
