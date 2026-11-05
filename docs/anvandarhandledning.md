@@ -43,7 +43,7 @@ Panelen har fem hopfällbara sektioner, i samma ordning som i SLU Artdatabankens
 ### Taxa
 
 - **Arts- eller släktnamn:** ett namn per rad, vetenskapligt eller svenskt, till exempel `Anemone nemorosa`, `vitsippa`, `Primula veris` och `gullviva`. Skiftläget spelar ingen roll.
-- Ett namn med två ord eller ett svenskt artnamn matchas **exakt**.
+- Ett namn med två ord eller ett svenskt artnamn matchas **exakt**. Fynd som är bestämda till en underart, en varietet eller en hybrid ingår därför inte i sökningen på arten. SLU:s egen söksida Fynddata räknar däremot med underliggande taxa, så antalet fynd kan skilja sig mellan de två. För backsippa i Skåne gav sökningen på arten 2 514 fynd, medan Fynddata med underarter gav 5 988.
 - Ett **släktnamn** på ett ord, till exempel `Anemone`, omfattar alla arter i släktet (även hybrider och underarter) och fynd som bara är bestämda till släkte.
 - Ett **svenskt släktnamn**, till exempel `sippor`, slås upp till sitt vetenskapliga släkte (Anemone). Panelen skriver då "sippor är släktet Anemone: alla dess arter ingår." Det går bara för släkten som har fynd bestämda till släktnivå i datan.
 - Om ett namn inte finns alls i datan, till exempel vid felstavning, står det under knapparna: "Ingen kärlväxt har namnet: …. Kontrollera stavningen." Sökningen ger då inga fynd för det namnet, men övriga namn fungerar.
