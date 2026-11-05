@@ -1,16 +1,30 @@
 # QGIS-plugin för artobservationer (SLU Artdatabanken): projektplan
 
+> **Historiskt dokument.** Planen skrevs 2026-10-24, innan någon kod fanns, och sparas som ett underlag för hur projektet växte fram. Avsnitten nedan är inte uppdaterade och beskriver inte pluginet som det är nu. Nuläget står i [README.md](../../README.md), [CHANGELOG.md](../../CHANGELOG.md) och avsnittet "Status 2026-11-05" här nedan.
+
 Ursprunglig status: planeringsfas, ingen kod skriven (se Status milstolpe 1 nedan). Datum: 2026-10-24. Ägare: Mats (GitHub: matself).
 Detta dokument är tänkt som startpunkt för arbete i Claude Code. Läs avsnitt 2 och 3 innan något byggs: de skiljer det som är verifierat från det som bara antagits.
+
+## Status 2026-11-05 (version 1.0.1)
+
+Sedan milstolpe 1 har följande hänt:
+
+- Version 1.0.1 är byggd och finns som release på GitHub (`species_data-1.0.1.zip`). Förrådet är publikt och koden är öppen (GPL-2.0-or-later).
+- SLU Artdatabanken har svarat på supportmejlet (se `findings.md`): öppen källkod godkänns, WFS-tjänsten får användas utan nyckel, och varje användare skaffar en egen nyckel om REST-API:et används. Ingen nyckel behövs i pluginet, eftersom det bara använder WFS. SLU föredrar REST för stora hämtningar, men det är ett önskemål och inte byggt.
+- Pluginet har fått två flikar utöver Hämta: **Lokaler** (grupperar fynd till lokaler) och **Samvariation** (platser där flera arter rapporterats från samma plats). Metoderna beskrivs i `docs/metod-lokaler.md` och `docs/metod-samvariation.md`.
+- Hämtningen väntar en sekund mellan sidorna om 1 000 fynd.
+- Svensk översättning, svensk användarhandledning och CI (ruff, Bandit och tester mot QGIS 3 LTR och senaste) finns.
+- Fortfarande inte byggt: Processing-algoritmer, taxonomisökning (Dyntaxa), REST-sökning, QField-anpassning och stilförinställningar utöver år.
+- Loggan och formuleringen av källan väntar på SLU:s svar. Ingen logotyp används.
 
 ## Status 2026-10-24 (milstolpe 1)
 
 Avsnitten nedan är den ursprungliga planen. Det som faktiskt byggdes och avvek:
 
-- Namn: "Species Data (SLU Artdatabanken)" / "Artdata (SLU Artdatabanken)", paketet heter `species_data`. Supportmejlet är skickat (`docs/supportmail-skickat.md`), svar saknas.
+- Namn: "Species Data (SLU Artdatabanken)" / "Artdata (SLU Artdatabanken)", paketet heter `species_data`. Supportmejlet är skickat (`supportmail-skickat.md`), svar saknas.
 - Inget API-nyckel behövs i denna version: allt går via den öppna WFS-tjänsten. Auth, taxonomisökning (Dyntaxa) och REST-sökning är inte byggda. `Query.to_sos_filter()` är förberedd men oanvänd.
 - Endast kärlväxter och endast Artportalen (dataProviderId 1). Skyddade fynd hanteras aldrig (fas 4 utgår).
-- WFS-filter: OGC-XML, inte CQL (se `docs/findings.md`). `resultType=hits` fungerar inte: antal räknas genom sökning med `startIndex`.
+- WFS-filter: OGC-XML, inte CQL (se `findings.md`). `resultType=hits` fungerar inte: antal räknas genom sökning med `startIndex`.
 - Levande WFS-lager provades men ströks: en sökning hämtas i bakgrunden och visas som ett tillfälligt lager, färgat per år. Användaren sparar med QGIS egna verktyg. Ingen GeoPackage-skrivning i pluginet.
 - Panelen: fem hopfällbara sektioner enligt Fynddata, knapp för att räkna, knapp för att hämta och visa, förloppsindikatorer, varning för felstavade artnamn.
 - Processing-algoritmer (fas 3) är inte påbörjade; mallens exempelalgoritm är borttagen.
@@ -24,7 +38,7 @@ Beslut hittills:
 - Utdata är punktlager (inte rutnät/grids). Rutnätsaggregering är utanför MVP.
 - Varje användare har eget konto och egen API-nyckel. Ingen nyckel bäddas in i pluginet.
 - Pluginet ska publiceras öppet (plugins.qgis.org). Kod, kommentarer och dokumentation på engelska, gränssnittet översatt till svenska.
-- Pluginnamn (beslutat): "Artdata (SLU Artdatabanken)", engelskt namn "Species Data (SLU Artdatabanken)". Mönstret följer pluginet för Lantmäteriets data ("Geodata: {datatyp} (Lantmäteriet)"): beskrivande del först, källan i parentes. Metadata ska tydligt säga att pluginet är fristående. Namnet är inte skriftligt godkänt av SLU: det är taget upp i supportmejlet som Mats har skickat (`docs/supportmail-skickat.md`, punkt 2.3 i villkoren). Inväntar skriftligt svar innan något publiceras. Tekniskt paketnamn: `species_data`.
+- Pluginnamn (beslutat): "Artdata (SLU Artdatabanken)", engelskt namn "Species Data (SLU Artdatabanken)". Mönstret följer pluginet för Lantmäteriets data ("Geodata: {datatyp} (Lantmäteriet)"): beskrivande del först, källan i parentes. Metadata ska tydligt säga att pluginet är fristående. Namnet är inte skriftligt godkänt av SLU: det är taget upp i supportmejlet som Mats har skickat (`supportmail-skickat.md`, punkt 2.3 i villkoren). Inväntar skriftligt svar innan något publiceras. Tekniskt paketnamn: `species_data`.
 - Målversioner: QGIS 3.44 (testad miljö hos Mats: 3.44.2) och kompatibilitet med QGIS 4 (Qt6) från start.
 
 Ej beslutat (se avsnitt 9): primärt arbetsflöde (art, plats eller jämförelse) och målgrupp (konsulter, länsstyrelse, ideella).
@@ -137,7 +151,7 @@ Beslut att fatta tidigt: om punkter alltid hämtas via WFS-lager (live, men begr
 ## 8. Första uppgifter i Claude Code
 
 1. Skapa repo och skelett (använd Mats tidigare plugin som mall), `metadata.txt`, licensval (förslag: GPL-2.0-or-later eller MIT, bekräfta mot QGIS-kraven).
-2. Skriv `docs/findings.md` med avsnitt 3 som checklista och fyll i det som går att verifiera utan nyckel.
+2. Skriv `findings.md` med avsnitt 3 som checklista och fyll i det som går att verifiera utan nyckel.
 3. Implementera frågemodellen (`query`) med enhetstester för CQL och SOS-JSON, utan nätverk.
 4. Implementera `auth` mot QGIS autentiseringshanterare med en dummy-konfiguration i test.
 5. Förbered fixtures från de verifierade WFS-svaren (sanerade).

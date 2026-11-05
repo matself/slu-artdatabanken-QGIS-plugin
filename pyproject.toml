@@ -1,7 +1,7 @@
 [tool.ruff]
 line-length = 120
 target-version = "py39"
-extend-exclude = ["dist", "build", "old_scripts"]
+extend-exclude = ["dist", "build", "docs/utveckling/old_scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B"]

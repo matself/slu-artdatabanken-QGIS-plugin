@@ -36,7 +36,7 @@ Limits of this version: vascular plants only, Artportalen data only, no protecte
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version.
 - [docs/anvandarhandledning.md](docs/anvandarhandledning.md): user guide (Swedish).
 - [docs/metod-lokaler.md](docs/metod-lokaler.md) and [docs/metod-samvariation.md](docs/metod-samvariation.md): how localities and co-occurrence are computed, with assumptions and limitations (Swedish).
-- [docs/findings.md](docs/findings.md): what was found out about the services.
+- [docs/utveckling/](docs/utveckling/README.md): the history of the project (plan, findings about the services, correspondence with SLU, the review checks and the reference scripts), kept as a record.
 
 ## Data, personal data and terms
 
@@ -85,7 +85,7 @@ Layout:
 - `cooccurrence.py`, `cooccurrence_tab.py`: places where several species have been reported from the same place.
 - `settings.py`, `settings_widgets.py`, `source_check.py`: size presets and stored settings, and the check that a layer comes from this plugin.
 - `dockwidget.py`, `plugin.py`: the panel and the plugin class.
-- `docs/`: findings about the services (`findings.md`), the Fynddata reference, the sent support mail, the API specification and a log of sources (`SOURCES.md`).
+- `docs/`: the user guide, the method descriptions, a log of sources (`SOURCES.md`) and `utveckling/` with the development history.
 
 ## Qt5 / Qt6 compatibility rules
 

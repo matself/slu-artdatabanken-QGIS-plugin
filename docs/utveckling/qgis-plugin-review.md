@@ -19,7 +19,7 @@ Review run 2026-10-24 with the checks of the `qgis-plugin-review` skill against 
 ## Still to do before upload
 
 - Make the repository public (or create the final public repository and update the three URLs in `metadata.txt`).
-- Wait for the written answer from SLU Artdatabanken to the support mail (`docs/supportmail-skickat.md`): approval of distribution as open source, and of the plugin name. The mail promises that nothing is published before then.
+- Wait for the written answer from SLU Artdatabanken to the support mail (`supportmail-skickat.md`): approval of distribution as open source, and of the plugin name. The mail promises that nothing is published before then.
 - Create an OSGeo ID and log in on plugins.qgis.org.
 - Tag the release to match the version (`v0.1.0`) and upload `dist/species_data-0.1.0.zip` (built by `scripts/build_zip.py`, which also compiles the Swedish translation).
 - Check that no existing plugin already does this (search plugins.qgis.org for "Artportalen", "SBDI", "species observations").

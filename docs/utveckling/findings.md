@@ -18,7 +18,7 @@ Working alternative: probe with `startIndex=N&maxFeatures=1` and check whether a
 Open. Needs an API key.
 
 ## 4. Real `take` cap
-**Answered by SLU (Martin Käck, 2026-10-26):** `take` max is 1000 on `Observations/Search`, with paging up to 10 000 observations. SLU recommends `Observations_ObservationsByCursor` instead: it pages up to 2 million and is gentler on the database. SLU asks for a plugin-side limit of **100 000** observations. The result carries `TotalCount`. If it is above 100 000 the plugin must say so and ask the user for a narrower filter or a closer zoom. Usage examples: integration tests `ObservationsByCursorTests.cs` in github.com/biodiversitydata-se/SOS. (Note: the earlier spec reading of `SearchByCursor` take max 2500 is not contradicted; confirm in the API console.)
+**Answered by SLU (2026-10-26):** `take` max is 1000 on `Observations/Search`, with paging up to 10 000 observations. SLU recommends `Observations_ObservationsByCursor` instead: it pages up to 2 million and is gentler on the database. SLU asks for a plugin-side limit of **100 000** observations. The result carries `TotalCount`. If it is above 100 000 the plugin must say so and ask the user for a narrower filter or a closer zoom. Usage examples: integration tests `ObservationsByCursorTests.cs` in github.com/biodiversitydata-se/SOS. (Note: the earlier spec reading of `SearchByCursor` take max 2500 is not contradicted; confirm in the API console.)
 
 ## 5. One key for SOS and Taxonomy, rate limits
 **Answered by SLU (2026-10-26):** yes, one key. Both APIs belong to the same Product. Rate limits per API key: max 1 GB per hour and max 60 calls per minute. A REST client must throttle below 60 calls/min.
