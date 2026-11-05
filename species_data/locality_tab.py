@@ -347,6 +347,8 @@ class LocalityTab(QWidget):
         by_species = {}
         self._fids = {}  # feature ids, in the same order as the points of each species
         self._taxa = {}  # the scientific names, in the same order too
+        self._sources = {}  # the data source (datasetName) of each observation, in the same order
+        has_source = "datasetName" in names
         chosen = self._chosen()
         for feature in layer.getFeatures():
             geometry = feature.geometry()
@@ -368,6 +370,8 @@ class LocalityTab(QWidget):
             )
             self._fids.setdefault(species, []).append(feature.id())
             self._taxa.setdefault(species, []).append(feature["scientificName"] or species)
+            source = (feature["datasetName"] if has_source else None) or tr("(unknown)")
+            self._sources.setdefault(species, []).append(source)
         return by_species
 
     def _params(self) -> clustering.Params:
@@ -413,7 +417,7 @@ class LocalityTab(QWidget):
 
     def _done(self, results):
         params = self._params_used
-        layer = build_layer(results, self._source, params, self._subset, self._taxa)
+        layer = build_layer(results, self._source, params, self._subset, self._taxa, self._sources)
         self._finished()
         QgsProject.instance().addMapLayer(layer)
         written = ""
@@ -490,14 +494,23 @@ def write_locality_ids(layer, numbers: dict):
     layer.triggerRepaint()
 
 
-def build_layer(results: dict, source, params: clustering.Params, subset: bool = False, names: dict = None):
+def build_layer(
+    results: dict,
+    source,
+    params: clustering.Params,
+    subset: bool = False,
+    names: dict = None,
+    sources: dict = None,
+):
     """A temporary layer with one point per locality.
 
     ``subset`` is true when only some of the species of ``source`` were grouped; the layer is
     then named after them instead of after the source. ``names`` holds, per species, the
-    scientific name of each observation (in the order of the points) for the field ``taxa``.
+    scientific name of each observation (in the order of the points) for the field ``taxa``,
+    and ``sources`` the data source of each, for the field ``sources``.
     """
     names = names or {}
+    sources = sources or {}
     species_names = ", ".join(sorted(results))
     name = f"{species_names}: localities" if subset else f"{source.name()}: localities"
     layer = QgsVectorLayer(f"Point?crs={CRS}", name, "memory")
@@ -512,6 +525,7 @@ def build_layer(results: dict, source, params: clustering.Params, subset: bool =
         ("radius_m", QMetaType.Type.Int),
         ("n_not_refound", QMetaType.Type.Int),
         ("taxa", QMetaType.Type.QString),
+        ("sources", QMetaType.Type.QString),
     )
     layer.dataProvider().addAttributes([QgsField(name, kind) for name, kind in fields])
     layer.updateFields()
@@ -524,12 +538,15 @@ def build_layer(results: dict, source, params: clustering.Params, subset: bool =
             feature.setAttributes(
                 [species, offsets[species] + loc.id, loc.category, loc.count, len(loc.years), loc.first_year,
                  loc.last_year, round(loc.radius), loc.not_refound_count,
-                 taxa.summary([names[species][m] for m in loc.members]) if species in names else species]
+                 taxa.summary([names[species][m] for m in loc.members]) if species in names else species,
+                 taxa.summary([sources[species][m] for m in loc.members]) if species in sources else ""]
             )
             features.append(feature)
     layer.dataProvider().addFeatures(features)
     layer.setRenderer(_renderer())
-    layer.setMetadata(_metadata(layer.name(), source, params, sorted(results) if subset else ()))
+    used = [sources[species][m] for species, result in results.items() if species in sources
+            for loc in result.localities for m in loc.members]
+    layer.setMetadata(_metadata(layer.name(), source, params, sorted(results) if subset else (), taxa.summary(used)))
     return layer
 
 
@@ -574,7 +591,7 @@ def _renderer():
     return renderer
 
 
-def _metadata(name, source, params, species=()):
+def _metadata(name, source, params, species=(), sources=""):
     meta = QgsLayerMetadata()
     meta.setTitle(name)
     lines = [
@@ -590,6 +607,8 @@ def _metadata(name, source, params, species=()):
     ]
     if species:
         lines.insert(2, "Species grouped: " + ", ".join(species) + ".")
+    if sources:
+        lines.insert(2, "Sources of the observations in the localities: " + sources + ".")
     meta.setAbstract("\n".join(lines))
     meta.setRights(source.metadata().rights() or [provenance.DISCLAIMER])
     meta.setType("dataset")

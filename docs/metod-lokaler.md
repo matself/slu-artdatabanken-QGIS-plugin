@@ -59,6 +59,7 @@ Noggrannheten vidgar alltså varje fynds räckvidd med sin egen radie. Två fynd
 - **Centrum:** medelpunkten av fynden viktad med 1 / (1 + U_i), så att exakta fynd drar mer än vaga (saknat U_i räknas som U_max).
 - **Radie:** största avståndet från centrum till ett fynds läge. Fyndens egen noggrannhet läggs inte till.
 - **Namn:** fältet `taxa` listar de vetenskapliga namn som ingår i lokalen och antalet fynd med varje namn (underarter räknas till arten, se avsnitt 2), så att det syns vad som slagits ihop.
+- **Källor:** fältet `sources` listar de dataset (`datasetName`) som lokalens fynd kommer från och antalet fynd från varje. Lagrets metadata anger källorna för alla fynd som ingår i lokalerna.
 - **Antal fynd, årtal, första och sista år.**
 - **Klass:** se avsnitt 4.
 - **Numrering:** lokalerna numreras efter minsta x- och sedan y-koordinat bland sina fynd.
@@ -111,7 +112,7 @@ I en orienterande körning på hämtade data delades ungefär 40 % av paren av �
 
 1. **Rapporter, inte förekomster.** Rapporteringsinsatsen varierar mellan platser, tider och källor. Platser som besöks ofta, till exempel där det finns sällsynta arter, får fler fynd och fler år. Antal fynd och antal år mäter därför delvis rapporteringen.
 2. **Noggrannhet tolkas som radie.** Koordinatnoggrannheten behandlas som ett största avstånd, inte som en sannolikhetsfördelning. Kvaliteten på angiven noggrannhet varierar mellan rapportörer och kan inte kontrolleras här.
-3. **Selektion mot precisa fynd.** Fynd över U_max utesluts. Äldre fynd är ofta vagare, så historiska lokaler kan vara underrepresenterade. Valet av U_max påverkar vilka lokaler som finns.
+3. **Selektion mot precisa fynd.** Fynd över U_max utesluts. Äldre fynd är ofta vagare, så historiska lokaler kan vara underrepresenterade. Valet av U_max påverkar vilka lokaler som finns. Ett exempel är en export av backsippa i Skåne med flera källor: alla 298 fynd från Virtuella Herbariet och 74 av 197 från iNaturalist hade en noggrannhet över 500 m och lämnades därför utanför med standardgränsen, medan 5 413 av 5 482 från Artportalen kom med. Vilka källor lokalerna bygger på beror alltså också på U_max, och fältet `sources` visar det.
 4. **Skalberoende.** Resultatet beror på L, B och R_max. Det finns ingen "rätt" lokalstorlek. Samma fynd ger fler och mindre lokaler vid Strikt och färre och större vid Generös.
 5. **Kedjor.** Enkellänkning kan koppla ihop avlägsna fynd via mellanliggande. Brygg-regeln för vaga fynd och R_max dämpar det men tar inte bort det.
 6. **Taxonomi och datum.** Se avsnitt 2.
@@ -133,4 +134,4 @@ Idén att gruppera fynd efter avstånd och koordinatnoggrannhet har tidigare anv
 | 2026-10-29 | 0.2.0 | Första beskrivningen. Enkellänkning med noggrannhet, brygg-regel för vaga fynd, delning av kedjor, storleksval, deterministisk ordning. |
 | 2026-11-05 | 1.0.0 | Ingen ändring i metoden. |
 | 2026-11-05 | 1.0.1 | Ingen ändring i metoden. |
-| 2026-11-05 | opublicerad | Namn under artnivå räknas till arten vid grupperingen, och artsökningen tar med underarter. Fältet `taxa` visar vilka namn som ingår i varje lokal. |
+| 2026-11-05 | opublicerad | Namn under artnivå räknas till arten vid grupperingen, och artsökningen tar med underarter. Fältet `taxa` visar vilka namn som ingår i varje lokal, och fältet `sources` vilka källor. |

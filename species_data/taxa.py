@@ -17,7 +17,7 @@ def summary(names: list) -> str:
     """The names and how many observations carry each, most frequent first, for example
     ``Pulsatilla vulgaris (12); Pulsatilla vulgaris subsp. vulgaris (30)``.
 
-    Shown per locality, so the user can see what was folded into the species.
+    Used for the scientific names and for the data sources of the observations in a locality.
     """
     counts = {}
     for name in names:
