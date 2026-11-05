@@ -57,4 +57,6 @@ class SpeciesDataPlugin:
         if self.dock is None:
             self.dock = SpeciesDataDockWidget(self.iface, self.iface.mainWindow())
             self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
+            self.dock.show()  # the first click shows the panel, later clicks toggle it
+            return
         self.dock.setVisible(not self.dock.isVisible())
