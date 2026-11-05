@@ -9,13 +9,26 @@ Skrivet 2026-11-05 som förberedelse för en senare version. Inget av detta är 
 - **Koordinatnoggrannheten skiljer.** De tre iNaturalist-fynd som provades hade 68 m, 25 527 m och 25 527 m. Värden runt 25 km ser ut som iNaturalists dolda eller generaliserade positioner. Pluginets standardgräns på 500 m för noggrannhet (`max_uncertainty`) rensar bort sådana fynd av sig själv, men det betyder också att en del av iNaturalists fynd inte syns.
 - Artportalen har `dataProviderId` 1. Någon fullständig lista över leverantörer går inte att få utan nyckel (REST `/DataProviders`). Därför vet vi inte vilka fler som finns i tjänsten, bara de två som provats.
 
+- **Jämförelse för en art som många rapporterar (backsippa, *Pulsatilla vulgaris*, Skåne, fynd av förekomst, ingen tidsgräns, 2026-11-05).** Räknat genom att leta efter sista träffen med `startIndex`:
+
+  | Källa i SOS | Antal fynd |
+  |---|---|
+  | Alla leverantörer | 2 510 |
+  | Artportalen (1) | 2 063 |
+  | iNaturalist (19) | 197 |
+  | Övriga leverantörer (skillnaden) | cirka 250 |
+
+  På inaturalist.org själv gav samma art 245 fynd i Skåne enligt användarens egen sökning, och SLU:s söksida gav 2 058. iNaturalist tillför alltså ungefär 9 % utöver Artportalen för en art där människor ofta rapporterar, och SOS har färre iNaturalist-fynd (197) än iNaturalists egen sökning (245). Skillnaden kan bero på urval, licens eller tidpunkt och är inte utredd. Slutsats: iNaturalist tillför lite, och spåret har låg prioritet.
+- **Det finns fler leverantörer än de två.** Differensen på cirka 250 fynd visar att andra leverantörer än Artportalen och iNaturalist har fynd av samma art. Pluginet söker i dag bara i Artportalen, så de ingår inte. Vilka de är är inte utrett, och det går att ta reda på med en lista över leverantörer (nyckel) eller genom att fråga SLU.
+
 ### Ej kontrollerat
 - Om iNaturalist-fynd i tjänsten är dubbletter av Artportalens fynd (samma fynd i båda). Det måste frågas SLU om.
 - Vilken licens varje fynd har. Fältet `datasetName` anger källan, men något licensfält syntes inte i svaret för de fynd som provades. Pluginets metadata säger redan att leverantörer kan ha olika licenser.
 - Om iNaturalists egen API-tjänst vore ett alternativ. En sökning gav att iNaturalist ber om högst ungefär 60 anrop per minut och avråder från att skrapa data via API:et till förmån för deras exportfiler, och att licensen varierar per observation (CC0, CC BY, CC BY-NC). Den exakta dagsgränsen och de aktuella villkoren bekräftades inte hos iNaturalist. Det spåret behöver ett eget kodspår, egen taxonomi och egen licenshantering, och är inte att rekommendera så länge SLU:s tjänst redan har fynden.
 
 ### Förslag
-- Kryssrutor för källa under **Egenskaper**: *Artportalen* (förkryssad) och *iNaturalist* (av). Ingen annan källa tills vi vet vilka som finns.
+- **Låg prioritet.** Jämförelsen för backsippa visar att iNaturalist tillför ungefär 9 % utöver Artportalen. Det väger lätt mot att blanda källor med olika rapporteringsmönster. Gör inget förrän det finns ett konkret behov.
+- Om det ändå byggs: kryssrutor för källa under **Egenskaper**: *Artportalen* (förkryssad) och *iNaturalist* (av). Ingen annan källa tills vi vet vilka som finns.
 - Tydlig märkning när fler än en källa är vald: lagrets metadata anger vilka källor som ingår och hur många fynd varje källa gav, och fältet `datasetName` finns redan i lagret.
 - Lokal- och samvariationsresultaten ärver källuppgiften i metadatan, så att tolkningen går att göra. Överväg ett fält per lokal med antal fynd per källa, så att användaren kan se var blandningen drar.
 
