@@ -5,6 +5,7 @@ Material från utvecklingen av pluginet, sparat som underlag. Det är inte dokum
 | Fil | Vad |
 |---|---|
 | [PLAN.md](PLAN.md) | Den ursprungliga projektplanen (2026-10-24) med en uppdaterad statusrad. Historisk. |
+| [TODO.md](TODO.md) | Det som ska göras inför nästa version. |
 | [findings.md](findings.md) | Vad som visade sig om SLU:s tjänster, med frågor och svar från SLU. |
 | [fynddata-ui-reference.md](fynddata-ui-reference.md) | Referens för uppbyggnaden av Fynddatas söksida. |
 | [sos-api-v1.json](sos-api-v1.json) | OpenAPI-specifikationen för SOS REST, som användes som referens. |
