@@ -4,7 +4,6 @@ Den här handledningen är på svenska och hör till version 1.0.1 av pluginet. 
 
 > **Fristående plugin.** Pluginet är utvecklat av en privatperson. Det ägs, utvecklas och stöds inte av SLU eller SLU Artdatabanken. Fynddata hämtas från SLU Artdatabankens Species Observation System (Artportalen) enligt deras API-villkor.
 >
-> **Testversion.** Pluginet är märkt experimentellt och är inte publicerat. Synpunkter välkomnas, se sist i det här dokumentet.
 
 ## 1. Vad pluginet gör
 
@@ -197,14 +196,3 @@ Under *Avancerat* ställer du in största avstånd mellan lokaler, största plat
 | Punkterna syns inte | Kontrollera att lagret är ikryssat och att kartan är i rätt område. Lagret ligger överst men kan döljas av ett annat lager. |
 | Räkningen eller hämtningen stannar | Tjänsten kan vara långsam eller ha ett driftavbrott (servern startas om dagligen). Avbryt i uppgiftshanteraren och försök igen om en stund. Felet visas i en ruta. |
 | Lagret är borta efter omstart | Det är ett tillfälligt lager. Exportera det först, se avsnitt 5. |
-
-## 9. Synpunkter och granskning
-
-Det här är en första testversion. Särskilt intressant att få synpunkter på:
-
-- om namnsökningen (art, släkte, svenskt släktnamn) är tydlig och räcker som start
-- om gränserna (varning från 2 000 fynd, stopp vid 100 000) och antalet anrop är rimliga för tjänsten
-- om källangivelsen och texten om att pluginet är fristående är tillräckliga och tydliga
-- om pluginets namn "Artdata (SLU Artdatabanken)" är lämpligt (frågan har ställts till supporten)
-
-Skicka synpunkter till Mats Elfström, mats.elfstrom@gmail.com, eller som ärende på kodförrådet: <https://github.com/matself/slu-artdatabanken-QGIS-plugin/issues> (kodförrådet är ännu inte publikt).
